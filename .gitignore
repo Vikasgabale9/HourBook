@@ -1,0 +1,48 @@
+# ==============================
+# Spring Boot / Maven
+# ==============================
+target/
+HELP.md
+
+# ==============================
+# Sensitive Configuration
+# ==============================
+src/main/resources/application.properties
+.env
+.env.*
+
+# ==============================
+# STS / Eclipse
+# ==============================
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# ==============================
+# IntelliJ IDEA
+# ==============================
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# ==============================
+# VS Code
+# ==============================
+.vscode/
+
+# ==============================
+# OS Files
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/

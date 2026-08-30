@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Users Management</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div th:replace="~{admin/fragments/header :: header}"></div>
+
+<div class="content">
+
+    <h2>Users Management</h2>
+
+    <form th:action="@{/admin/users}" method="get" class="search-box">
+        <input type="text" name="search" th:value="${search}" placeholder="Search by name, phone or email">
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(users)}"
+         class="table-container"
+         style="text-align:center;padding:60px 20px;color:#94a3b8;">
+        <p style="font-size:18px;font-weight:600;">No users found.</p>
+    </div>
+
+    <div class="table-container" th:unless="${#lists.isEmpty(users)}">
+
+        <table>
+            <thead>
+            <tr>
+                <th>S.No</th>
+                <th>ID</th>
+                <th>Full Name</th>
+                <th>Phone Number</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Mobile Verified</th>
+                <th>Email Verified</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <tr th:each="user, stat : ${users}">
+
+                <!-- Pagination Serial Number -->
+                <td th:text="${userPage.number * userPage.size + stat.count}"></td>
+
+                <td th:text="${user.id}"></td>
+                <td th:text="${user.fullName}"></td>
+                <td th:text="${user.phoneNumber}"></td>
+                <td th:text="${user.email}"></td>
+                <td th:text="${user.appUser.role}"></td>
+
+                <td>
+                    <span th:if="${user.appUser.isVerified}" class="status-active">
+                        Verified
+                    </span>
+
+                    <span th:unless="${user.appUser.isVerified}" class="status-inactive">
+                        Not Verified
+                    </span>
+                </td>
+
+                <td>
+                    <span th:if="${user.emailVerified}" class="status-active">
+                        Verified
+                    </span>
+
+                    <span th:unless="${user.emailVerified}" class="status-inactive">
+                        Not Verified
+                    </span>
+                </td>
+
+                <td>
+                    <span th:if="${user.isActive}" class="status-active">
+                        Active
+                    </span>
+
+                    <span th:unless="${user.isActive}" class="status-inactive">
+                        Inactive
+                    </span>
+                </td>
+
+                <td>
+                    <form th:action="@{'/admin/users/status/' + ${user.id}}" method="post">
+
+                        <button
+                                th:if="${user.isActive}"
+                                class="btn-danger"
+                                type="submit"
+                                onclick="return confirm('Deactivate this user?')">
+
+                            Deactivate
+
+                        </button>
+
+                        <button
+                                th:unless="${user.isActive}"
+                                class="btn-success"
+                                type="submit"
+                                onclick="return confirm('Activate this user?')">
+
+                            Activate
+
+                        </button>
+
+                    </form>
+                </td>
+
+            </tr>
+
+            </tbody>
+        </table>
+
+        <!-- Pagination bar -->
+        <div class="pagination-bar"
+             style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+
+            <!-- Page size selector -->
+            <div class="page-size-selector" style="display:flex;align-items:center;gap:8px;">
+                <label for="pageSize" style="color:#64748b;font-size:14px;">Show</label>
+                <select id="pageSize" th:data-base-url="@{/admin/users}" th:data-search="${search}" onchange="changePageSize(this)">
+                    <option value="10" th:selected="${userPage.size == 10}">10</option>
+                    <option value="20" th:selected="${userPage.size == 20}">20</option>
+                    <option value="50" th:selected="${userPage.size == 50}">50</option>
+                    <option value="100" th:selected="${userPage.size == 100}">100</option>
+                </select>
+                <span style="color:#64748b;font-size:14px;">entries</span>
+            </div>
+
+            <!-- Page numbers -->
+            <div class="pagination"
+                 th:if="${userPage.totalPages > 1}"
+                 style="display:flex;align-items:center;gap:6px;">
+
+                <a th:if="${!userPage.first}"
+                   th:href="@{/admin/users(page=${userPage.number-1},size=${userPage.size},search=${search})}"
+                   class="btn-secondary">
+                    &laquo; Previous
+                </a>
+                <span th:if="${userPage.first}" class="btn-secondary disabled">&laquo; Previous</span>
+
+                <!-- First page + leading ellipsis -->
+                <a th:if="${startPage > 0}"
+                   th:href="@{/admin/users(page=0,size=${userPage.size},search=${search})}"
+                   class="page-link">1</a>
+                <span th:if="${startPage > 1}" class="page-ellipsis">...</span>
+
+                <!-- Page window -->
+                <span th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                    <a th:if="${i != userPage.number}"
+                       th:href="@{/admin/users(page=${i},size=${userPage.size},search=${search})}"
+                       class="page-link"
+                       th:text="${i + 1}"></a>
+                    <span th:if="${i == userPage.number}"
+                          class="page-link active-page"
+                          th:text="${i + 1}"></span>
+                </span>
+
+                <!-- Trailing ellipsis + last page -->
+                <span th:if="${endPage < userPage.totalPages - 2}" class="page-ellipsis">...</span>
+                <a th:if="${endPage < userPage.totalPages - 1}"
+                   th:href="@{/admin/users(page=${userPage.totalPages - 1},size=${userPage.size},search=${search})}"
+                   class="page-link"
+                   th:text="${userPage.totalPages}"></a>
+
+                <a th:if="${!userPage.last}"
+                   th:href="@{/admin/users(page=${userPage.number+1},size=${userPage.size},search=${search})}"
+                   class="btn-secondary">
+                    Next &raquo;
+                </a>
+                <span th:if="${userPage.last}" class="btn-secondary disabled">Next &raquo;</span>
+
+            </div>
+
+            <div style="color:#64748b;font-size:14px;">
+                Page <strong th:text="${userPage.number + 1}"></strong>
+                of <strong th:text="${userPage.totalPages}"></strong>
+                (<span th:text="${userPage.totalElements}"></span> total)
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+<script>
+
+    function changePageSize(select) {
+
+        const baseUrl = select.dataset.baseUrl;
+        const newSize = select.value;
+
+        const params = new URLSearchParams(window.location.search);
+        const search = params.get("search");
+
+        let url = baseUrl + "?page=0&size=" + newSize;
+
+        if (search && search.trim() !== "") {
+            url += "&search=" + encodeURIComponent(search);
+        }
+
+        window.location.href = url;
+    }
+
+</script>
+
+</body>
+</html>

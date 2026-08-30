@@ -1,0 +1,61 @@
+<div th:fragment="sidebar">
+
+    <aside class="bg-dark text-white position-fixed top-0 start-0 vh-100 shadow" style="width:260px; z-index:1000;">
+
+        <div class="text-center py-4 border-bottom">
+
+            <h3 class="fw-bold">
+                <i class="bi bi-dribbble text-primary"></i>
+                HourBook
+            </h3>
+
+            <small class="text-secondary">
+                Vendor Panel
+            </small>
+
+        </div>
+
+        <div class="mt-4">
+
+            <a th:href="@{/vendor/dashboard}" class="nav-link text-white px-4 py-3">
+                <i class="bi bi-speedometer2 me-2"></i>
+                Dashboard
+            </a>
+
+			<a th:href="@{/vendor/profile}" class="nav-link text-white px-4 py-3">
+			    <i class="bi bi-person-circle me-2"></i>
+			    Profile
+			</a>
+
+            <a th:href="@{/vendor/grounds}" class="nav-link text-white px-4 py-3">
+                <i class="bi bi-building me-2"></i>
+                Grounds
+            </a>
+
+            <a th:href="@{/vendor/bookings}" class="nav-link text-white px-4 py-3">
+                <i class="bi bi-calendar-check me-2"></i>
+                Bookings
+            </a>
+
+            <a th:href="@{/vendor/revenue}" class="nav-link text-white px-4 py-3">
+                <i class="bi bi-cash-stack me-2"></i>
+                Revenue
+            </a>
+
+            <a th:href="@{/vendor/kyc}" class="nav-link text-white px-4 py-3">
+                <i class="bi bi-shield-check me-2"></i>
+                KYC
+            </a>
+
+            <hr class="text-secondary">
+
+            <a th:href="@{/vendor/logout}" class="nav-link text-danger px-4 py-3">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+</div>

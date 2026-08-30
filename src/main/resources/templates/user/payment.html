@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Complete Payment</title>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+            rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<!-- Sidebar -->
+
+<div th:replace="~{user/fragments/sidebar :: sidebar}"></div>
+
+
+<div style="margin-left:260px;">
+
+    <!-- Header -->
+
+    <div th:replace="~{user/fragments/header :: header}"></div>
+
+
+    <div class="container-fluid p-4">
+
+        <div class="row justify-content-center">
+
+            <div class="col-md-7 col-lg-6">
+
+                <div class="card shadow border-0">
+
+                    <!-- Card Header -->
+
+                    <div class="card-header bg-primary text-white">
+
+                        <h4 class="mb-0">
+
+                            <i class="bi bi-credit-card"></i>
+
+                            Complete Your Payment
+
+                        </h4>
+
+                    </div>
+
+
+                    <div class="card-body p-4">
+
+
+                        <!-- Booking Details -->
+
+                        <h5 class="mb-3">
+
+                            Booking Details
+
+                        </h5>
+
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <tr>
+
+                                    <th>Booking ID</th>
+
+                                    <td th:text="${booking.id}"></td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <th>Ground</th>
+
+                                    <td th:text="${booking.ground.name}">
+
+                                        Ground Name
+
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <th>Date</th>
+
+                                    <td th:text="${#temporals.format(
+                                            booking.bookingDate,
+                                            'dd MMM yyyy'
+                                        )}">
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <th>Time</th>
+
+                                    <td>
+
+                                        <span th:text="${#temporals.format(
+                                                booking.startTime,
+                                                'hh:mm a'
+                                            )}">
+                                        </span>
+
+                                        -
+
+                                        <span th:text="${#temporals.format(
+                                                booking.endTime,
+                                                'hh:mm a'
+                                            )}">
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <th>Total Amount</th>
+
+                                    <td class="fw-bold text-success">
+
+                                        ₹
+
+                                        <span th:text="${booking.totalAmount}">
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            </table>
+
+                        </div>
+
+
+                        <!-- Payment Button -->
+
+                        <div class="d-grid mt-4">
+
+                            <button
+                                    type="button"
+                                    id="pay-button"
+                                    class="btn btn-success btn-lg">
+
+                                <i class="bi bi-lock-fill"></i>
+
+                                Pay Securely with Razorpay
+
+                            </button>
+
+                        </div>
+
+
+                        <p class="text-center text-muted mt-3 mb-0">
+
+                            <i class="bi bi-shield-check"></i>
+
+                            Secure payment powered by Razorpay
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Footer -->
+
+    <div th:replace="~{user/fragments/footer :: footer}"></div>
+
+</div>
+
+
+
+<!-- ========================================= -->
+<!-- Hidden Payment Verification Form -->
+<!-- ========================================= -->
+
+<form
+        id="payment-form"
+        method="post"
+        th:action="@{/user/bookings/verify-payment}">
+
+
+    <input
+            type="hidden"
+            name="bookingId"
+            th:value="${booking.id}">
+
+
+    <input
+            type="hidden"
+            name="razorpayOrderId"
+            id="razorpayOrderId">
+
+
+    <input
+            type="hidden"
+            name="razorpayPaymentId"
+            id="razorpayPaymentId">
+
+
+    <input
+            type="hidden"
+            name="razorpaySignature"
+            id="razorpaySignature">
+
+
+</form>
+
+
+
+<!-- ========================================= -->
+<!-- Razorpay Checkout -->
+<!-- ========================================= -->
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
+<script th:inline="javascript">
+
+    const razorpayOptions = {
+
+        /*
+         * Razorpay Key ID
+         *
+         * Comes from UserBookingController
+         */
+
+        key: /*[[${razorpayKeyId}]]*/ "",
+
+
+        /*
+         * Amount in paise
+         *
+         * Example:
+         * ₹500 = 50000 paise
+         *
+         * This should come from Razorpay Order,
+         * not calculated again in frontend.
+         */
+
+        amount: /*[[${razorpayAmount}]]*/ 0,
+
+
+        currency: "INR",
+
+
+        name: "HourBook",
+
+
+        description: "Ground Slot Booking",
+
+
+        /*
+         * Razorpay Order ID
+         */
+
+        order_id: /*[[${razorpayOrderId}]]*/ "",
+
+
+        /*
+         * Successful Payment
+         */
+
+        handler: function (response) {
+
+            document.getElementById(
+                "razorpayOrderId"
+            ).value =
+                response.razorpay_order_id;
+
+
+            document.getElementById(
+                "razorpayPaymentId"
+            ).value =
+                response.razorpay_payment_id;
+
+
+            document.getElementById(
+                "razorpaySignature"
+            ).value =
+                response.razorpay_signature;
+
+
+            document.getElementById(
+                "payment-form"
+            ).submit();
+
+        },
+
+
+        /*
+         * If user closes Razorpay popup
+         */
+
+        modal: {
+
+            ondismiss: function () {
+
+                console.log(
+                    "Payment popup closed"
+                );
+
+            }
+
+        },
+
+
+        theme: {
+
+            color: "#0d6efd"
+
+        }
+
+    };
+
+
+    /*
+     * Initialize Razorpay
+     */
+
+    const razorpay = new Razorpay(
+        razorpayOptions
+    );
+
+
+    /*
+     * Open Razorpay when button clicked
+     */
+
+    document
+        .getElementById("pay-button")
+        .addEventListener(
+            "click",
+            function () {
+
+                razorpay.open();
+
+            }
+        );
+
+</script>
+
+
+
+<!-- Bootstrap -->
+
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+</body>
+
+</html>

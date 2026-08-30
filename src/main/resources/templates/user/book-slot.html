@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Book Ground Slot</title>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<!-- Sidebar -->
+
+<div th:replace="~{user/fragments/sidebar :: sidebar}"></div>
+
+
+<div style="margin-left:260px;">
+
+    <!-- Header -->
+
+    <div th:replace="~{user/fragments/header :: header}"></div>
+
+
+    <div class="container-fluid p-4">
+
+        <!-- Page Heading -->
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h2 class="fw-bold">
+
+                    <i class="bi bi-calendar-check text-primary"></i>
+
+                    Book Your Slot
+
+                </h2>
+
+                <p class="text-muted mb-0">
+
+                    Select a date and choose an available time slot.
+
+                </p>
+
+            </div>
+
+            <a th:href="@{/user/grounds}"
+               class="btn btn-outline-secondary">
+
+                <i class="bi bi-arrow-left"></i>
+
+                Back to Grounds
+
+            </a>
+
+        </div>
+
+
+        <!-- Date Selection -->
+
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-body">
+
+                <form
+                    method="get"
+                    th:action="@{/user/bookings/ground/{id}(id=${groundId})}"
+                    class="row align-items-end">
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-bold">
+
+                            <i class="bi bi-calendar-date"></i>
+
+                            Select Booking Date
+
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date"
+                            class="form-control"
+                            th:value="${selectedDate}"
+                            th:min="${#temporals.format(#temporals.createNow().toLocalDate(), 'yyyy-MM-dd')}"
+                            required>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100">
+
+                            <i class="bi bi-search"></i>
+
+                            Show Slots
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <!-- Flash Messages -->
+
+        <div class="alert alert-danger alert-dismissible fade show"
+             th:if="${error}"
+             role="alert">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${error}"></span>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+
+        </div>
+
+        <div class="alert alert-success alert-dismissible fade show"
+             th:if="${success}"
+             role="alert">
+
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${success}"></span>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+
+        </div>
+
+
+        <!-- Selected Date -->
+
+        <div class="mb-3">
+
+            <h5>
+
+                Available Slots for:
+
+                <span
+                    class="text-primary"
+                    th:text="${#temporals.format(selectedDate, 'dd MMMM yyyy')}">
+
+                </span>
+
+            </h5>
+
+        </div>
+
+
+        <!-- Slots -->
+
+        <div class="row g-3"
+             th:if="${slots != null and !#lists.isEmpty(slots)}">
+
+            <div
+                class="col-xl-3 col-lg-4 col-md-6"
+                th:each="slot : ${slots}">
+
+                <!-- Available Slot -->
+
+                <div
+                    class="card border-success shadow-sm h-100"
+                    th:if="${slot.available}">
+
+                    <div class="card-body text-center">
+
+                        <div class="mb-2">
+
+                            <i
+                                class="bi bi-clock-history text-success"
+                                style="font-size:30px;">
+
+                            </i>
+
+                        </div>
+
+                        <h5 class="fw-bold">
+
+                            <span
+                                th:text="${#temporals.format(slot.startTime, 'hh:mm a')}">
+
+                            </span>
+
+                            -
+
+                            <span
+                                th:text="${#temporals.format(slot.endTime, 'hh:mm a')}">
+
+                            </span>
+
+                        </h5>
+
+                        <span class="badge bg-success mb-3">
+
+                            Available
+
+                        </span>
+
+
+                        <form
+                            method="post"
+                            th:action="@{/user/bookings/create}">
+
+                            <input
+                                type="hidden"
+                                name="groundId"
+                                th:value="${groundId}">
+
+                            <input
+                                type="hidden"
+                                name="bookingDate"
+                                th:value="${selectedDate}">
+
+                            <input
+                                type="hidden"
+                                name="startTime"
+                                th:value="${slot.startTime}">
+
+                            <button
+                                type="submit"
+                                class="btn btn-success w-100">
+
+                                <i class="bi bi-check-circle"></i>
+
+                                Book This Slot
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Booked Slot -->
+
+                <div
+                    class="card border-danger bg-light h-100"
+                    th:unless="${slot.available}">
+
+                    <div class="card-body text-center text-muted">
+
+                        <div class="mb-2">
+
+                            <i
+                                class="bi bi-x-circle text-danger"
+                                style="font-size:30px;">
+
+                            </i>
+
+                        </div>
+
+                        <h5>
+
+                            <span
+                                th:text="${#temporals.format(slot.startTime, 'hh:mm a')}">
+
+                            </span>
+
+                            -
+
+                            <span
+                                th:text="${#temporals.format(slot.endTime, 'hh:mm a')}">
+
+                            </span>
+
+                        </h5>
+
+                        <span class="badge bg-danger">
+
+                            Not Available
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- No Slots -->
+
+        <div
+            class="alert alert-warning"
+            th:if="${slots == null or #lists.isEmpty(slots)}">
+
+            <i class="bi bi-exclamation-triangle"></i>
+
+            No booking slots are available for this date.
+
+        </div>
+
+
+        <!-- Important Information -->
+
+        <div class="card border-0 shadow-sm mt-4">
+
+            <div class="card-body">
+
+                <h6 class="fw-bold">
+
+                    <i class="bi bi-info-circle text-primary"></i>
+
+                    Booking Information
+
+                </h6>
+
+                <ul class="mb-0 text-muted">
+
+                    <li>Select an available time slot to continue.</li>
+
+                    <li>Each booking is currently for one time slot.</li>
+
+                    <li>Past dates and expired slots cannot be booked.</li>
+
+                    <li>A slot may become unavailable if another user books it first.</li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Footer -->
+
+    <div th:replace="~{user/fragments/footer :: footer}"></div>
+
+</div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+
+</html>

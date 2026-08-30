@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Ground Images</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div th:replace="~{admin/fragments/header :: header}"></div>
+
+<div class="content">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2>Images — <span th:text="${ground.name}"></span></h2>
+        <a th:href="@{/admin/grounds}" class="add-btn">← Back to Grounds</a>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${ground.imageUrls == null || #lists.isEmpty(ground.imageUrls)}"
+         class="table-container"
+         style="text-align:center;padding:60px 20px;color:#94a3b8;">
+        <p style="font-size:18px;font-weight:600;">No Images Available</p>
+        <p style="margin-top:8px;">No images have been uploaded for this ground yet.</p>
+    </div>
+
+    <!-- Image Gallery -->
+    <div class="image-grid"
+         th:if="${ground.imageUrls != null && !#lists.isEmpty(ground.imageUrls)}">
+
+        <div class="image-card" th:each="image : ${ground.imageUrls}">
+            <img th:src="${image}" class="gallery-image" alt="Ground image">
+        </div>
+
+    </div>
+
+</div>
+
+<div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+</body>
+</html>

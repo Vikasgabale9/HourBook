@@ -1,0 +1,38 @@
+<div th:fragment="header">
+
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+
+        <div class="container-fluid">
+
+            <h4 class="fw-bold mb-0">
+                Vendor Dashboard
+            </h4>
+
+            <div class="d-flex align-items-center">
+
+                <div class="text-end me-3">
+
+                    <h6 class="mb-0"
+                        th:text="${session.vendorName}">
+                        Vendor
+                    </h6>
+
+                    <small class="text-muted"
+                           th:text="${session.vendorEmail}">
+                        vendor@email.com
+                    </small>
+
+                </div>
+
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                     class="rounded-circle border"
+                     width="45"
+                     height="45">
+
+            </div>
+
+        </div>
+
+    </nav>
+
+</div>

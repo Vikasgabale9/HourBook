@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<div th:fragment="header">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+
+    <div class="container-fluid">
+
+        <span class="navbar-brand fw-bold">
+
+            User Panel
+
+        </span>
+
+        <div class="ms-auto">
+
+            <span class="me-3">
+
+                Welcome,
+
+                <strong th:text="${session.userName}"></strong>
+
+            </span>
+
+        </div>
+
+    </div>
+
+</nav>
+
+</div>
+
+</body>
+
+</html>

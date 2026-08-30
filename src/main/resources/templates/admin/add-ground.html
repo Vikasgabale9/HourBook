@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Add Ground</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div th:replace="~{admin/fragments/header :: header}"></div>
+
+<div class="content">
+
+    <h2>Add Ground</h2>
+
+    <div class="table-container">
+
+        <form th:action="@{/admin/grounds/save}"
+              method="post"
+              enctype="multipart/form-data">
+
+            <!-- Ground Name -->
+            <div class="form-group">
+                <label>Ground Name</label>
+                <input type="text" name="name" required placeholder="Enter ground name">
+            </div>
+
+            <!-- Location -->
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" name="location" required placeholder="Enter location">
+            </div>
+
+            <!-- Sport -->
+            <div class="form-group">
+                <label>Sport</label>
+                <input type="text" name="sports" required placeholder="e.g. Cricket, Football">
+            </div>
+
+            <!-- Price -->
+            <div class="form-group">
+                <label>Price Per Hour (₹)</label>
+                <input type="number" name="pricePerHour" required placeholder="Enter price" min="0">
+            </div>
+
+            <!-- Ground Type -->
+            <div class="form-group">
+                <label>Ground Type</label>
+                <select name="type" required>
+                    <option value="">Select Ground Type</option>
+                    <option value="GRASS">Grass</option>
+                    <option value="TURF_ASTROTURF">Turf / Astroturf</option>
+                    <option value="CLAY">Clay</option>
+                    <option value="SYNTHETIC_MATTING">Synthetic Matting</option>
+                </select>
+            </div>
+
+            <!-- Vendor -->
+            <div class="form-group">
+                <label>Vendor</label>
+                <select name="vendorId" required>
+                    <option value="">Select Vendor</option>
+                    <option th:each="vendor : ${vendors}"
+                            th:value="${vendor.id}"
+                            th:text="${vendor.phoneNumber}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- Ground Operating Hours -->
+            <div class="form-group">
+                <label>Opening Time</label>
+                <input type="time" name="openingTime" required>
+            </div>
+
+            <div class="form-group">
+                <label>Closing Time</label>
+                <input type="time" name="closingTime" required>
+            </div>
+
+            <div class="form-group">
+                <label>Booking Slot Duration (Minutes)</label>
+                <input type="number" name="slotDurationMinutes" value="60" min="15" step="15" required>
+            </div>
+
+            <!-- Amenities -->
+            <div class="form-group">
+                <label>Amenities</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" name="amenities" value="FLOODLIGHTS">
+                        Flood Lights
+                    </label>
+                    <label>
+                        <input type="checkbox" name="amenities" value="LOCKERROOMS">
+                        Locker Rooms
+                    </label>
+                    <label>
+                        <input type="checkbox" name="amenities" value="PARKING">
+                        Parking
+                    </label>
+                    <label>
+                        <input type="checkbox" name="amenities" value="DRINKINGWATER">
+                        Drinking Water
+                    </label>
+                    <label>
+                        <input type="checkbox" name="amenities" value="CAFETERIA">
+                        Cafeteria
+                    </label>
+                    <label>
+                        <input type="checkbox" name="amenities" value="EQUIPMENTHIRE">
+                        Equipment Hire
+                    </label>
+                </div>
+            </div>
+
+            <!-- Images -->
+            <div class="form-group">
+                <label>Ground Images</label>
+                <input type="file" name="images" multiple accept="image/*">
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn-success">Save Ground</button>
+                <a th:href="@{/admin/grounds}" class="btn-danger">Cancel</a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+</body>
+</html>

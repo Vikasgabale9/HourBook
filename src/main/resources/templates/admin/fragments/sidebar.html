@@ -1,0 +1,27 @@
+<div th:fragment="sidebar">
+
+    <div class="sidebar">
+
+        <div class="logo">
+            HourBook
+        </div>
+
+        <ul>
+            <li><a th:href="@{/admin/dashboard}">📊 Dashboard</a></li>
+
+            <li><a th:href="@{/admin/users}">👥 Users</a></li>
+
+            <li><a th:href="@{/admin/vendors}">🏢 Vendors</a></li>
+
+            <li><a th:href="@{/admin/grounds}">⚽ Grounds</a></li>
+
+            <li><a th:href="@{/admin/grounds/add}">➕ Add Ground</a></li>
+
+            <li><a th:href="@{/admin/bookings}">📅 Bookings</a></li>
+
+            <li><a th:href="@{/admin/logout}">🚪 Logout</a></li>
+        </ul>
+
+    </div>
+
+</div>

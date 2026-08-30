@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<div th:fragment="sidebar">
+
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark"
+         style="width:250px;height:100vh;position:fixed;left:0;top:0;">
+
+        <a href="/user/dashboard"
+           class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+
+            <span class="fs-4 fw-bold">
+                HourBook
+            </span>
+
+        </a>
+
+        <hr>
+
+        <ul class="nav nav-pills flex-column mb-auto">
+
+            <li class="nav-item mb-2">
+
+                <a th:href="@{/user/dashboard}"
+                   class="nav-link text-white">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    Dashboard
+
+                </a>
+
+            </li>
+
+            <li class="mb-2">
+
+                <a th:href="@{/user/grounds}"
+                   class="nav-link text-white">
+
+                    <i class="bi bi-building"></i>
+
+                    Browse Grounds
+
+                </a>
+
+            </li>
+
+            <li class="mb-2">
+
+                <a th:href="@{/user/bookings}"
+                   class="nav-link text-white">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    My Bookings
+
+                </a>
+
+            </li>
+
+            <li class="mb-2">
+
+                <a th:href="@{/user/profile}"
+                   class="nav-link text-white">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    My Profile
+
+                </a>
+
+            </li>
+
+            <li class="mb-2">
+
+                <a th:href="@{/user/logout}"
+                   class="nav-link text-danger">
+
+                    <i class="bi bi-box-arrow-right"></i>
+
+                    Logout
+
+                </a>
+
+            </li>
+
+        </ul>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

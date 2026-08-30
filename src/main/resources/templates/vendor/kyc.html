@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Vendor KYC</title>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div th:replace="~{vendor/fragments/sidebar :: sidebar}"></div>
+
+<div style="margin-left:260px;">
+
+    <div th:replace="~{vendor/fragments/header :: header}"></div>
+
+    <div class="container-fluid p-4">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-primary text-white">
+
+                <h4 class="mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Vendor KYC
+                </h4>
+
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-bordered align-middle">
+
+                    <tbody>
+
+                    <tr>
+                        <th width="30%">Full Name</th>
+                        <td th:text="${vendor.fullName}"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Aadhaar Number</th>
+                        <td th:text="${vendor.aadhaarNumber}"></td>
+                    </tr>
+
+                    <tr>
+                        <th>PAN Number</th>
+                        <td th:text="${vendor.panNumber}"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Date Of Birth</th>
+                        <td th:text="${vendor.dateOfBirth}"></td>
+                    </tr>
+
+                    <tr>
+                        <th>KYC Status</th>
+                        <td>
+
+                            <span class="badge bg-warning"
+                                  th:if="${vendor.kycStatus == 'NOT_SUBMITTED'}">
+                                Not Submitted
+                            </span>
+
+                            <span class="badge bg-warning text-dark"
+                                  th:if="${vendor.kycStatus == 'PENDING'}">
+                                Pending
+                            </span>
+
+                            <span class="badge bg-success"
+                                  th:if="${vendor.kycStatus == 'VERIFIED'}">
+                                Verified
+                            </span>
+
+                            <span class="badge bg-danger"
+                                  th:if="${vendor.kycStatus == 'REJECTED'}">
+                                Rejected
+                            </span>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Profile Image</th>
+                        <td>
+
+                            <img th:if="${vendor.profileImage != null}"
+                                 th:src="@{${vendor.profileImage}}"
+                                 class="rounded border"
+                                 width="130">
+
+                            <span th:unless="${vendor.profileImage != null}">
+                                Not Uploaded
+                            </span>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Aadhaar Image</th>
+                        <td>
+
+                            <img th:if="${vendor.aadhaarImage != null}"
+                                 th:src="@{${vendor.aadhaarImage}}"
+                                 class="img-thumbnail"
+                                 width="220">
+
+                            <span th:unless="${vendor.aadhaarImage != null}">
+                                Not Uploaded
+                            </span>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>PAN Image</th>
+                        <td>
+
+                            <img th:if="${vendor.panImage != null}"
+                                 th:src="@{${vendor.panImage}}"
+                                 class="img-thumbnail"
+                                 width="220">
+
+                            <span th:unless="${vendor.panImage != null}">
+                                Not Uploaded
+                            </span>
+
+                        </td>
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div th:replace="~{vendor/fragments/footer :: footer}"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

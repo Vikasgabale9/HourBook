@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div th:replace="~{admin/fragments/header :: header}"></div>
+
+<div class="content">
+
+    <h2>Dashboard Overview</h2>
+
+    <!-- Main Stats -->
+    <div class="cards">
+
+        <a th:href="@{/admin/users}" class="dashboard-card">
+            <div class="card">
+                <h3>Total Users</h3>
+                <h1 th:text="${usersCount}">0</h1>
+            </div>
+        </a>
+
+        <a th:href="@{/admin/vendors}" class="dashboard-card">
+            <div class="card">
+                <h3>Total Vendors</h3>
+                <h1 th:text="${vendorsCount}">0</h1>
+            </div>
+        </a>
+
+        <a th:href="@{/admin/grounds}" class="dashboard-card">
+            <div class="card">
+                <h3>Total Grounds</h3>
+                <h1 th:text="${groundsCount}">0</h1>
+            </div>
+        </a>
+
+        <a th:href="@{/admin/bookings}" class="dashboard-card">
+            <div class="card">
+                <h3>Total Bookings</h3>
+                <h1>0</h1>
+            </div>
+        </a>
+
+    </div>
+
+    <h2>Ground Approval Status</h2>
+
+    <!-- Ground Status Cards -->
+    <div class="cards">
+
+        <a th:href="@{/admin/grounds(status='PENDING')}" class="dashboard-card">
+            <div class="card">
+                <h3>Pending Grounds</h3>
+                <h1 style="color:#d97706;" th:text="${pendingGrounds}">0</h1>
+            </div>
+        </a>
+
+        <a th:href="@{/admin/grounds(status='APPROVED')}" class="dashboard-card">
+            <div class="card">
+                <h3>Approved Grounds</h3>
+                <h1 style="color:#16a34a;" th:text="${approvedGrounds}">0</h1>
+            </div>
+        </a>
+
+        <a th:href="@{/admin/grounds(status='REJECTED')}" class="dashboard-card">
+            <div class="card">
+                <h3>Rejected Grounds</h3>
+                <h1 style="color:#dc2626;" th:text="${rejectedGrounds}">0</h1>
+            </div>
+        </a>
+
+    </div>
+
+</div>
+
+<div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+</body>
+</html>

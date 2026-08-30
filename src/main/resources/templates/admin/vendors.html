@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Vendors Management</title>
+	<link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+
+	<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+	<div th:replace="~{admin/fragments/header :: header}"></div>
+
+	<div class="content">
+
+		<h2>Vendors Management</h2>
+
+		<form th:action="@{/admin/vendors}" method="get" class="search-box">
+
+			<input type="text"
+				   name="search"
+				   th:value="${search}"
+				   placeholder="Search by name, phone or email">
+
+			<button type="submit">
+				Search
+			</button>
+
+		</form>
+
+		<!-- Empty State -->
+		<div th:if="${#lists.isEmpty(vendors)}" class="table-container"
+			style="text-align:center;padding:60px 20px;color:#94a3b8;">
+			<p style="font-size:18px;font-weight:600;">No vendors found.</p>
+		</div>
+
+		<div class="table-container" th:unless="${#lists.isEmpty(vendors)}">
+			<table>
+				<thead>
+					<tr>
+						<th>S.No</th>
+						<th>Profile</th>
+						<th>Vendor ID</th>
+						<th>Full Name</th>
+						<th>Phone Number</th>
+						<th>Email</th>
+						<th>Role</th>
+						<th>Mobile Verified</th>
+						<th>Email Verified</th>
+						<th>KYC Status</th>
+						<th>KYC Action</th>
+						<th>Documents</th>
+						<th>Account Status</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+
+					<tr th:each="vendor, stat : ${vendors}">
+
+						<td th:text="${vendorPage.number * vendorPage.size + stat.count}"></td>
+
+						<td>
+							<img th:if="${vendor.profileImage != null and !vendor.profileImage.isEmpty()}"
+								th:src="${vendor.profileImage}" class="ground-image"
+								style="width:42px;height:42px;border-radius:50%;object-fit:cover;">
+							<span th:unless="${vendor.profileImage != null and !vendor.profileImage.isEmpty()}"
+								style="font-size:24px;">👤</span>
+						</td>
+
+						<td th:text="${vendor.id}"></td>
+						<td th:text="${vendor.fullName}"></td>
+						<td th:text="${vendor.phoneNumber}"></td>
+						<td th:text="${vendor.email}"></td>
+						<td th:text="${vendor.vendorAuth.role}"></td>
+
+						<td>
+							<span th:if="${vendor.vendorAuth.isVerified}" class="status-active">Verified</span>
+							<span th:unless="${vendor.vendorAuth.isVerified}" class="status-inactive">Not
+								Verified</span>
+						</td>
+
+						<td>
+							<span th:if="${vendor.emailVerified}" class="status-active">Verified</span>
+							<span th:unless="${vendor.emailVerified}" class="status-inactive">Not Verified</span>
+						</td>
+
+						<!-- KYC Status -->
+						<td>
+							<span class="badge-approved"
+								th:if="${vendor.kycStatus.name() == 'VERIFIED'}">
+								Verified
+							</span>
+							<span class="badge-rejected"
+								th:if="${vendor.kycStatus.name() == 'REJECTED'}">
+								Rejected
+							</span>
+							<span class="badge-pending"
+								th:if="${vendor.kycStatus.name() == 'PENDING'}">
+								Pending
+							</span>
+							<span class="badge-pending"
+								th:if="${vendor.kycStatus.name() == 'NOT_SUBMITTED'}">
+								Not Submitted
+							</span>
+						</td>
+
+						<!-- KYC Action -->
+						<td>
+							<!-- Pending -->
+							<div th:if="${vendor.kycStatus.name() == 'PENDING'}">
+								<form th:action="@{'/admin/vendors/kyc/approve/' + ${vendor.id}}"
+									  method="post"
+									  style="display:inline-block;">
+									<button type="submit"
+											class="btn btn-success btn-sm"
+											onclick="return confirm('Approve Vendor KYC?')">
+										<i class="bi bi-check-circle"></i>
+										Approve
+									</button>
+								</form>
+								<form th:action="@{'/admin/vendors/kyc/reject/' + ${vendor.id}}"
+									  method="post"
+									  style="display:inline-block;">
+									<button type="submit"
+											class="btn btn-danger btn-sm"
+											onclick="return confirm('Reject Vendor KYC?')">
+										<i class="bi bi-x-circle"></i>
+										Reject
+									</button>
+								</form>
+							</div>
+							<!-- Already Approved -->
+							<span th:if="${vendor.kycStatus.name() == 'VERIFIED'}"
+								  class="badge-approved">
+								<i class="bi bi-check-circle-fill"></i>
+								Approved
+							</span>
+							<!-- Already Rejected -->
+							<span th:if="${vendor.kycStatus.name() == 'REJECTED'}"
+								  class="badge-rejected">
+								<i class="bi bi-x-circle-fill"></i>
+								Rejected
+							</span>
+							<!-- Not Submitted -->
+							<span th:if="${vendor.kycStatus.name() == 'NOT_SUBMITTED'}"
+								  class="badge-pending">
+								Waiting For Upload
+							</span>
+						</td>
+
+						<td>
+							<button type="button" class="edit-btn"
+								th:if="${(vendor.aadhaarImage != null and !vendor.aadhaarImage.isEmpty()) or
+										 (vendor.panImage != null and !vendor.panImage.isEmpty())}"
+								th:data-aadhaar="${vendor.aadhaarImage}" th:data-pan="${vendor.panImage}"
+								th:data-name="${vendor.fullName}" onclick="showDocuments(this)">
+								View Docs
+							</button>
+							<span th:unless="${(vendor.aadhaarImage != null and !vendor.aadhaarImage.isEmpty()) or
+											  (vendor.panImage != null and !vendor.panImage.isEmpty())}"
+								style="color:#94a3b8;font-size:13px;">Not Uploaded</span>
+						</td>
+
+						<td>
+							<span th:if="${vendor.isActive}" class="status-active">Active</span>
+							<span th:unless="${vendor.isActive}" class="status-inactive">Inactive</span>
+						</td>
+
+						<td>
+							<form th:action="@{'/admin/vendors/status/' + ${vendor.id}}" method="post">
+								<button type="submit" th:if="${vendor.isActive}" class="btn-danger"
+									onclick="return confirm('Deactivate this vendor?')">
+									Deactivate
+								</button>
+								<button type="submit" th:unless="${vendor.isActive}" class="btn-success"
+									onclick="return confirm('Activate this vendor?')">
+									Activate
+								</button>
+							</form>
+						</td>
+
+					</tr>
+				</tbody>
+			</table>
+
+			<div class="pagination-bar"
+				style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+
+				<!-- Page size selector -->
+				<div class="page-size-selector" style="display:flex;align-items:center;gap:8px;">
+					<label for="pageSize" style="color:#64748b;font-size:14px;">Show</label>
+					<select id="pageSize" th:data-base-url="@{/admin/vendors}" onchange="changePageSize(this)">
+						<option value="10" th:selected="${vendorPage.size == 10}">10</option>
+						<option value="20" th:selected="${vendorPage.size == 20}">20</option>
+						<option value="50" th:selected="${vendorPage.size == 50}">50</option>
+						<option value="100" th:selected="${vendorPage.size == 100}">100</option>
+					</select>
+					<span style="color:#64748b;font-size:14px;">entries</span>
+				</div>
+
+				<!-- Page numbers -->
+				<div class="pagination"
+					th:if="${vendorPage.totalPages > 1}"
+					style="display:flex;align-items:center;gap:6px;">
+
+					<a th:if="${!vendorPage.first}"
+						th:href="@{/admin/vendors(page=${vendorPage.number-1},size=${vendorPage.size},search=${search})}"
+						class="btn-secondary">
+						&laquo; Previous
+					</a>
+					<span th:if="${vendorPage.first}" class="btn-secondary disabled">&laquo; Previous</span>
+
+					<!-- First page + leading ellipsis -->
+					<a th:if="${startPage > 0}"
+						th:href="@{/admin/vendors(page=0,size=${vendorPage.size},search=${search})}"
+						class="page-link">1</a>
+					<span th:if="${startPage > 1}" class="page-ellipsis">...</span>
+
+					<!-- Page window -->
+					<span th:each="i : ${#numbers.sequence(startPage, endPage)}">
+						<a th:if="${i != vendorPage.number}"
+							th:href="@{/admin/vendors(page=${i},size=${vendorPage.size},search=${search})}"
+							class="page-link"
+							th:text="${i + 1}"></a>
+						<span th:if="${i == vendorPage.number}"
+							class="page-link active-page"
+							th:text="${i + 1}"></span>
+					</span>
+
+					<!-- Trailing ellipsis + last page -->
+					<span th:if="${endPage < vendorPage.totalPages - 2}" class="page-ellipsis">...</span>
+					<a th:if="${endPage < vendorPage.totalPages - 1}"
+						th:href="@{/admin/vendors(page=${vendorPage.totalPages - 1},size=${vendorPage.size},search=${search})}"
+						class="page-link"
+						th:text="${vendorPage.totalPages}"></a>
+
+					<a th:if="${!vendorPage.last}"
+						th:href="@{/admin/vendors(page=${vendorPage.number+1},size=${vendorPage.size},search=${search})}"
+						class="btn-secondary">
+						Next &raquo;
+					</a>
+					<span th:if="${vendorPage.last}" class="btn-secondary disabled">Next &raquo;</span>
+
+				</div>
+
+				<div style="color:#64748b;font-size:14px;">
+					Page <strong th:text="${vendorPage.number + 1}"></strong>
+					of <strong th:text="${vendorPage.totalPages}"></strong>
+					(<span th:text="${vendorPage.totalElements}"></span> total)
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+
+	<div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+	<!-- Document Viewer Modal -->
+	<div id="docModal" class="modal">
+
+		<div class="modal-content">
+
+			<span class="close" onclick="closeModal()">&times;</span>
+
+			<h3 id="docVendorName" style="color:#1e3a8a;margin-bottom:18px;"></h3>
+
+			<h3>Aadhaar Card</h3>
+			<img id="aadhaarImg" class="document-image" alt="Aadhaar Card">
+
+			<hr style="margin:20px 0;border:none;border-top:1px solid #e5e7eb;">
+
+			<h3>PAN Card</h3>
+			<img id="panImg" class="document-image" alt="PAN Card">
+
+		</div>
+
+	</div>
+
+	<script>
+
+		function changePageSize(select) {
+
+			const baseUrl = select.dataset.baseUrl;
+			const newSize = select.value;
+
+			const params = new URLSearchParams(window.location.search);
+			const search = params.get("search");
+
+			let url = baseUrl + "?page=0&size=" + newSize;
+
+			if (search && search.trim() !== "") {
+				url += "&search=" + encodeURIComponent(search);
+			}
+
+			window.location.href = url;
+		}
+
+		function showDocuments(button) {
+
+			const aadhaar = button.dataset.aadhaar;
+			const pan = button.dataset.pan;
+			const name = button.dataset.name;
+
+			document.getElementById("docVendorName").innerText = name;
+
+			const aadhaarImg = document.getElementById("aadhaarImg");
+			const panImg = document.getElementById("panImg");
+
+			if (aadhaar) {
+				aadhaarImg.src = aadhaar;
+				aadhaarImg.style.display = "block";
+			} else {
+				aadhaarImg.style.display = "none";
+			}
+
+			if (pan) {
+				panImg.src = pan;
+				panImg.style.display = "block";
+			} else {
+				panImg.style.display = "none";
+			}
+
+			document.getElementById("docModal").style.display = "block";
+		}
+
+		function closeModal() {
+
+			document.getElementById("docModal").style.display = "none";
+		}
+
+		window.onclick = function (event) {
+
+			let modal = document.getElementById("docModal");
+
+			if (event.target == modal) {
+
+				modal.style.display = "none";
+			}
+		}
+
+		document.addEventListener("keydown", function (event) {
+
+			if (event.key === "Escape") {
+
+				closeModal();
+			}
+		});
+
+	</script>
+
+</body>
+
+</html>
