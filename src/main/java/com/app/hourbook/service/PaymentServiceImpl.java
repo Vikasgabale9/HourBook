@@ -13,7 +13,8 @@ import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 
 @Service
-public class PaymentServiceImpl implements PaymentService {
+public class PaymentServiceImpl
+        implements PaymentService {
 
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
@@ -33,13 +34,37 @@ public class PaymentServiceImpl implements PaymentService {
 
         try {
 
-            if (amount == null || amount <= 0) {
+            // =========================================
+            // Validate Amount
+            // =========================================
+
+            if (amount == null
+                    || amount <= 0) {
 
                 throw new RuntimeException(
                         "Invalid payment amount"
                 );
-
             }
+
+            if (razorpayKeyId == null
+                    || razorpayKeyId.isBlank()) {
+
+                throw new RuntimeException(
+                        "Razorpay Key ID is not configured"
+                );
+            }
+
+            if (razorpayKeySecret == null
+                    || razorpayKeySecret.isBlank()) {
+
+                throw new RuntimeException(
+                        "Razorpay Key Secret is not configured"
+                );
+            }
+
+            // =========================================
+            // Razorpay Client
+            // =========================================
 
             RazorpayClient razorpayClient =
                     new RazorpayClient(
@@ -47,12 +72,28 @@ public class PaymentServiceImpl implements PaymentService {
                             razorpayKeySecret
                     );
 
-            // Razorpay requires JSONObject
-            JSONObject options = new JSONObject();
+            // =========================================
+            // Amount in Paise
+            // =========================================
 
-            // Razorpay amount is in paise
             long amountInPaise =
-                    Math.round(amount * 100);
+                    Math.round(
+                            amount * 100
+                    );
+
+            if (amountInPaise <= 0) {
+
+                throw new RuntimeException(
+                        "Invalid Razorpay amount"
+                );
+            }
+
+            // =========================================
+            // Razorpay Order Options
+            // =========================================
+
+            JSONObject options =
+                    new JSONObject();
 
             options.put(
                     "amount",
@@ -69,20 +110,70 @@ public class PaymentServiceImpl implements PaymentService {
                     receipt
             );
 
-            return razorpayClient
-                    .orders
-                    .create(options);
+            // =========================================
+            // Create Order
+            // =========================================
+
+            Order order =
+                    razorpayClient
+                            .orders
+                            .create(options);
+
+            if (order == null) {
+
+                throw new RuntimeException(
+                        "Razorpay returned an empty order"
+                );
+            }
+
+            String orderId =
+                    order.get("id");
+
+            if (orderId == null
+                    || orderId.isBlank()) {
+
+                throw new RuntimeException(
+                        "Razorpay order ID was not returned"
+                );
+            }
+
+            System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
+                    "RAZORPAY ORDER CREATED"
+            );
+
+            System.out.println(
+                    "Order ID: " + orderId
+            );
+
+            System.out.println(
+                    "Amount: "
+                            + amountInPaise
+                            + " paise"
+            );
+
+            System.out.println(
+                    "========================================"
+            );
+
+            return order;
+
+        } catch (RuntimeException e) {
+
+            throw e;
 
         } catch (Exception e) {
 
-        	e.printStackTrace();
+            e.printStackTrace();
+
             throw new RuntimeException(
                     "Failed to create Razorpay order",
                     e
             );
-
         }
-
     }
 
 
@@ -92,24 +183,59 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public boolean verifyPayment(
+
             String razorpayOrderId,
+
             String razorpayPaymentId,
+
             String razorpaySignature) {
 
         try {
 
+            // =========================================
+            // Validate Input
+            // =========================================
+
             if (razorpayOrderId == null
-                    || razorpayPaymentId == null
-                    || razorpaySignature == null) {
+                    || razorpayOrderId.isBlank()) {
 
                 return false;
-
             }
+
+            if (razorpayPaymentId == null
+                    || razorpayPaymentId.isBlank()) {
+
+                return false;
+            }
+
+            if (razorpaySignature == null
+                    || razorpaySignature.isBlank()) {
+
+                return false;
+            }
+
+            if (razorpayKeySecret == null
+                    || razorpayKeySecret.isBlank()) {
+
+                throw new RuntimeException(
+                        "Razorpay Key Secret is not configured"
+                );
+            }
+
+            // =========================================
+            // Razorpay Signature Data
+            //
+            // order_id + "|" + payment_id
+            // =========================================
 
             String data =
                     razorpayOrderId
                             + "|"
                             + razorpayPaymentId;
+
+            // =========================================
+            // HMAC SHA-256
+            // =========================================
 
             Mac sha256Hmac =
                     Mac.getInstance(
@@ -118,9 +244,10 @@ public class PaymentServiceImpl implements PaymentService {
 
             SecretKeySpec secretKey =
                     new SecretKeySpec(
-                            razorpayKeySecret.getBytes(
-                                    StandardCharsets.UTF_8
-                            ),
+                            razorpayKeySecret
+                                    .getBytes(
+                                            StandardCharsets.UTF_8
+                                    ),
                             "HmacSHA256"
                     );
 
@@ -135,6 +262,10 @@ public class PaymentServiceImpl implements PaymentService {
                             )
                     );
 
+            // =========================================
+            // Convert Hash to Hex
+            // =========================================
+
             StringBuilder calculatedSignature =
                     new StringBuilder();
 
@@ -146,24 +277,53 @@ public class PaymentServiceImpl implements PaymentService {
                                 b
                         )
                 );
-
             }
 
-            return calculatedSignature
-                    .toString()
-                    .equals(
+            String expectedSignature =
+                    calculatedSignature.toString();
+
+            boolean verified =
+                    expectedSignature.equals(
                             razorpaySignature
                     );
 
+            System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
+                    "RAZORPAY SIGNATURE VERIFICATION"
+            );
+
+            System.out.println(
+                    "Order ID: "
+                            + razorpayOrderId
+            );
+
+            System.out.println(
+                    "Payment ID: "
+                            + razorpayPaymentId
+            );
+
+            System.out.println(
+                    "Signature Valid: "
+                            + verified
+            );
+
+            System.out.println(
+                    "========================================"
+            );
+
+            return verified;
+
         } catch (Exception e) {
+
+            e.printStackTrace();
 
             throw new RuntimeException(
                     "Failed to verify Razorpay payment",
                     e
             );
-
         }
-
     }
-
 }

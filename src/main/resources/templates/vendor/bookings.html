@@ -1,202 +1,916 @@
 <!DOCTYPE html>
+
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
     <meta charset="UTF-8">
 
-    <title>Bookings</title>
+    <title>Vendor Bookings</title>
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1">
 
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
           rel="stylesheet">
 
+    <style>
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .card {
+            border-radius: 14px;
+        }
+
+        .table thead th {
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .table tbody tr {
+            transition: background-color .15s ease-in-out;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fc;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: .5em .8em;
+            border-radius: 20px;
+        }
+
+        .status-confirmed {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        .status-completed {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+
+        .stat-card {
+            transition: transform .15s ease-in-out;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            font-size: 28px;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+        }
+
+        .empty-state h4 {
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+        }
+
+        .amount {
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+
+            .table-responsive {
+                border-radius: 10px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body class="bg-light">
 
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
 <div th:replace="~{vendor/fragments/sidebar :: sidebar}"></div>
+
+
+<!-- =========================================================
+     MAIN CONTENT
+========================================================= -->
 
 <div style="margin-left:260px;">
 
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
     <div th:replace="~{vendor/fragments/header :: header}"></div>
+
+
+    <!-- =====================================================
+         PAGE CONTENT
+    ====================================================== -->
 
     <div class="container-fluid p-4">
 
-        <h2 class="fw-bold mb-4">
 
-            <i class="bi bi-calendar-check text-primary"></i>
+        <!-- =================================================
+             PAGE HEADER
+        ================================================== -->
 
-            Booking Management
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
-        </h2>
+            <div>
 
-        <div class="row g-4">
+                <h2 class="fw-bold mb-1">
 
-            <div class="col-md-3">
+                    <i class="bi bi-calendar-check text-primary"></i>
 
-                <div class="card shadow-sm">
+                    Bookings
 
-                    <div class="card-body text-center">
+                </h2>
 
-                        <h2>128</h2>
+                <p class="text-muted mb-0">
 
-                        <p>Total Bookings</p>
+                    View and manage bookings for your grounds
 
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-3">
-
-                <div class="card shadow-sm">
-
-                    <div class="card-body text-center">
-
-                        <h2>6</h2>
-
-                        <p>Today's Bookings</p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-3">
-
-                <div class="card shadow-sm">
-
-                    <div class="card-body text-center">
-
-                        <h2>110</h2>
-
-                        <p>Completed</p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-3">
-
-                <div class="card shadow-sm">
-
-                    <div class="card-body text-center">
-
-                        <h2>9</h2>
-
-                        <p>Cancelled</p>
-
-                    </div>
-
-                </div>
+                </p>
 
             </div>
 
         </div>
 
-        <div class="card shadow-sm mt-4">
 
-            <div class="card-header bg-primary text-white">
+        <!-- =================================================
+             STATISTICS
+        ================================================== -->
 
-                Recent Bookings
+        <div class="row g-4 mb-4">
+
+
+            <!-- TOTAL BOOKINGS -->
+
+            <div class="col-xl-3 col-md-6">
+
+                <div class="card stat-card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="text-muted mb-2">
+
+                                    Total Bookings
+
+                                </h6>
+
+                                <h3 class="fw-bold mb-0"
+                                    th:text="${totalBookings}">
+
+                                    0
+
+                                </h3>
+
+                            </div>
+
+                            <i class="bi bi-calendar-check stat-icon text-primary"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
+
+
+            <!-- CONFIRMED -->
+
+            <div class="col-xl-3 col-md-6">
+
+                <div class="card stat-card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="text-muted mb-2">
+
+                                    Confirmed
+
+                                </h6>
+
+                                <h3 class="fw-bold mb-0 text-success"
+                                    th:text="${confirmedCount}">
+
+                                    0
+
+                                </h3>
+
+                            </div>
+
+                            <i class="bi bi-check-circle stat-icon text-success"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PENDING -->
+
+            <div class="col-xl-3 col-md-6">
+
+                <div class="card stat-card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="text-muted mb-2">
+
+                                    Pending
+
+                                </h6>
+
+                                <h3 class="fw-bold mb-0 text-warning"
+                                    th:text="${pendingCount}">
+
+                                    0
+
+                                </h3>
+
+                            </div>
+
+                            <i class="bi bi-clock-history stat-icon text-warning"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CANCELLED -->
+
+            <div class="col-xl-3 col-md-6">
+
+                <div class="card stat-card border-0 shadow-sm">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="text-muted mb-2">
+
+                                    Cancelled
+
+                                </h6>
+
+                                <h3 class="fw-bold mb-0 text-danger"
+                                    th:text="${cancelledCount}">
+
+                                    0
+
+                                </h3>
+
+                            </div>
+
+                            <i class="bi bi-x-circle stat-icon text-danger"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             FILTER
+        ================================================== -->
+
+        <div class="card border-0 shadow-sm mb-4">
 
             <div class="card-body">
 
-                <table class="table table-bordered">
+                <form method="get"
+                      th:action="@{/vendor/bookings}"
+                      class="row g-3 align-items-end">
 
-                    <thead>
 
-                    <tr>
+                    <!-- STATUS -->
 
-                        <th>Booking ID</th>
+                    <div class="col-md-4">
 
-                        <th>Ground</th>
+                        <label for="status"
+                               class="form-label fw-semibold">
 
-                        <th>User</th>
+                            Booking Status
 
-                        <th>Date</th>
+                        </label>
 
-                        <th>Time</th>
+                        <select id="status"
+                                name="status"
+                                class="form-select">
 
-                        <th>Status</th>
 
-                    </tr>
+                            <!-- ALL -->
 
-                    </thead>
+                            <option value=""
+                                    th:selected="${selectedStatus == null or selectedStatus == ''}">
 
-                    <tbody>
+                                All Bookings
 
-                    <tr>
+                            </option>
 
-                        <td>#BK101</td>
 
-                        <td>Football Turf</td>
+                            <!-- PENDING -->
 
-                        <td>Rahul</td>
+                            <option value="PENDING"
+                                    th:selected="${selectedStatus == 'PENDING'}">
 
-                        <td>15 Jul 2026</td>
+                                Pending
 
-                        <td>7 PM - 8 PM</td>
+                            </option>
 
-                        <td><span class="badge bg-success">Completed</span></td>
 
-                    </tr>
+                            <!-- CONFIRMED -->
 
-                    <tr>
+                            <option value="CONFIRMED"
+                                    th:selected="${selectedStatus == 'CONFIRMED'}">
 
-                        <td>#BK102</td>
+                                Confirmed
 
-                        <td>Cricket Ground</td>
+                            </option>
 
-                        <td>Amit</td>
 
-                        <td>16 Jul 2026</td>
+                            <!-- CANCELLED -->
 
-                        <td>6 PM - 8 PM</td>
+                            <option value="CANCELLED"
+                                    th:selected="${selectedStatus == 'CANCELLED'}">
 
-                        <td><span class="badge bg-warning">Upcoming</span></td>
+                                Cancelled
 
-                    </tr>
+                            </option>
 
-                    <tr>
 
-                        <td>#BK103</td>
+                            <!-- COMPLETED -->
 
-                        <td>Badminton Court</td>
+                            <option value="COMPLETED"
+                                    th:selected="${selectedStatus == 'COMPLETED'}">
 
-                        <td>Rohit</td>
+                                Completed
 
-                        <td>16 Jul 2026</td>
+                            </option>
 
-                        <td>9 AM - 10 AM</td>
 
-                        <td><span class="badge bg-danger">Cancelled</span></td>
+                        </select>
 
-                    </tr>
+                    </div>
 
-                    </tbody>
 
-                </table>
+                    <!-- FILTER BUTTON -->
+
+                    <div class="col-md-auto">
+
+                        <button type="submit"
+                                class="btn btn-primary">
+
+                            <i class="bi bi-funnel me-1"></i>
+
+                            Filter
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- CLEAR BUTTON -->
+
+                    <div class="col-md-auto">
+
+                        <a th:href="@{/vendor/bookings}"
+                           class="btn btn-outline-secondary">
+
+                            <i class="bi bi-x-circle me-1"></i>
+
+                            Clear
+
+                        </a>
+
+                    </div>
+
+
+                </form>
 
             </div>
 
         </div>
 
+
+        <!-- =================================================
+             BOOKINGS TABLE
+        ================================================== -->
+
+        <div class="card border-0 shadow-sm">
+
+
+            <!-- TABLE HEADER -->
+
+            <div class="card-header bg-primary text-white py-3">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <h5 class="mb-0">
+
+                        <i class="bi bi-list-check me-2"></i>
+
+                        Booking Details
+
+                    </h5>
+
+
+                    <!-- CURRENT RESULT COUNT -->
+
+                    <span class="badge bg-light text-primary"
+                          th:text="${bookings != null ? #lists.size(bookings) : 0}">
+
+                        0
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 TABLE BODY
+            ================================================== -->
+
+            <div class="card-body p-0">
+
+
+                <!-- TABLE -->
+
+                <div class="table-responsive"
+                     th:if="${bookings != null and !#lists.isEmpty(bookings)}">
+
+
+                    <table class="table table-hover align-middle mb-0">
+
+
+                        <!-- TABLE HEAD -->
+
+                        <thead class="table-light">
+
+                        <tr>
+
+                            <th class="px-3">
+                                Booking ID
+                            </th>
+
+                            <th>
+                                User ID
+                            </th>
+
+                            <th>
+                                Ground ID
+                            </th>
+
+                            <th>
+                                Booking Date
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Price / Hour
+                            </th>
+
+                            <th>
+                                Total Amount
+                            </th>
+
+                            <th>
+                                Payment
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <!-- =================================================
+                             TABLE ROWS
+                        ================================================== -->
+
+                        <tbody>
+
+
+                        <tr th:each="booking : ${bookings}">
+
+
+                            <!-- =============================================
+                                 BOOKING ID
+                            ============================================== -->
+
+                            <td class="px-3">
+
+                                <span class="fw-semibold"
+                                      th:text="'#' + ${booking.id}">
+
+                                    #1
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 USER ID
+                            ============================================== -->
+
+                            <td>
+
+                                <span th:if="${booking.user != null}"
+                                      th:text="'User #' + ${booking.user.id}">
+
+                                    User #1
+
+                                </span>
+
+
+                                <span th:unless="${booking.user != null}"
+                                      class="text-muted">
+
+                                    N/A
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 GROUND ID
+                            ============================================== -->
+
+                            <td>
+
+                                <span th:if="${booking.ground != null}"
+                                      th:text="'Ground #' + ${booking.ground.id}">
+
+                                    Ground #1
+
+                                </span>
+
+
+                                <span th:unless="${booking.ground != null}"
+                                      class="text-muted">
+
+                                    N/A
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 BOOKING DATE
+                            ============================================== -->
+
+                            <td>
+
+                                <span th:text="${booking.bookingDate}">
+
+                                    2026-09-08
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 TIME
+                            ============================================== -->
+
+                            <td>
+
+                                <span th:text="${booking.startTime}">
+
+                                    10:00
+
+                                </span>
+
+                                <span class="text-muted">
+
+                                    -
+
+                                </span>
+
+                                <span th:text="${booking.endTime}">
+
+                                    11:00
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 PRICE PER HOUR
+                            ============================================== -->
+
+                            <td>
+
+                                ₹<span th:text="${booking.pricePerHour}">
+
+                                    500
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 TOTAL AMOUNT
+                            ============================================== -->
+
+                            <td class="amount">
+
+                                ₹<span th:text="${booking.totalAmount}">
+
+                                    500
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 PAYMENT STATUS
+                            ============================================== -->
+
+                            <td>
+
+
+                                <!-- Payment status exists -->
+
+                                <span th:if="${booking.paymentStatus != null}">
+
+
+                                    <!-- PAID -->
+
+                                    <span class="badge bg-success"
+                                          th:if="${booking.paymentStatus.name() == 'PAID'}">
+
+                                        Paid
+
+                                    </span>
+
+
+                                    <!-- PENDING -->
+
+                                    <span class="badge bg-warning text-dark"
+                                          th:if="${booking.paymentStatus.name() == 'PENDING'}">
+
+                                        Pending
+
+                                    </span>
+
+
+                                    <!-- CREATED -->
+
+                                    <span class="badge bg-secondary"
+                                          th:if="${booking.paymentStatus.name() == 'CREATED'}">
+
+                                        Created
+
+                                    </span>
+
+
+                                    <!-- FAILED -->
+
+                                    <span class="badge bg-danger"
+                                          th:if="${booking.paymentStatus.name() == 'FAILED'}">
+
+                                        Failed
+
+                                    </span>
+
+
+                                    <!-- REFUNDED -->
+
+                                    <span class="badge bg-info text-dark"
+                                          th:if="${booking.paymentStatus.name() == 'REFUNDED'}">
+
+                                        Refunded
+
+                                    </span>
+
+
+                                </span>
+
+
+                                <!-- Payment status does not exist -->
+
+                                <span th:unless="${booking.paymentStatus != null}"
+                                      class="text-muted">
+
+                                    N/A
+
+                                </span>
+
+
+                            </td>
+
+
+                            <!-- =============================================
+                                 BOOKING STATUS
+                            ============================================== -->
+
+                            <td>
+
+
+                                <!-- CONFIRMED -->
+
+                                <span class="badge status-confirmed"
+                                      th:if="${booking.status != null and booking.status.name() == 'CONFIRMED'}">
+
+                                    Confirmed
+
+                                </span>
+
+
+                                <!-- PENDING -->
+
+                                <span class="badge status-pending"
+                                      th:if="${booking.status != null and booking.status.name() == 'PENDING'}">
+
+                                    Pending
+
+                                </span>
+
+
+                                <!-- CANCELLED -->
+
+                                <span class="badge status-cancelled"
+                                      th:if="${booking.status != null and booking.status.name() == 'CANCELLED'}">
+
+                                    Cancelled
+
+                                </span>
+
+
+                                <!-- COMPLETED -->
+
+                                <span class="badge status-completed"
+                                      th:if="${booking.status != null and booking.status.name() == 'COMPLETED'}">
+
+                                    Completed
+
+                                </span>
+
+
+                                <!-- UNKNOWN / NULL -->
+
+                                <span class="badge bg-secondary"
+                                      th:if="${booking.status == null}">
+
+                                    N/A
+
+                                </span>
+
+
+                            </td>
+
+
+                        </tr>
+
+
+                        </tbody>
+
+
+                    </table>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     EMPTY STATE
+                ================================================== -->
+
+                <div class="empty-state"
+                     th:if="${bookings == null or #lists.isEmpty(bookings)}">
+
+
+                    <i class="bi bi-calendar-x"></i>
+
+
+                    <h4>
+
+                        No Bookings Found
+
+                    </h4>
+
+
+                    <p class="mb-0">
+
+                        There are no bookings matching the selected filter.
+
+                    </p>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <div th:replace="~{vendor/fragments/footer :: footer}"></div>
+
+
     </div>
 
+
 </div>
+
+
+<!-- =========================================================
+     BOOTSTRAP JS
+========================================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
+
 
 </body>
 

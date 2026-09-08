@@ -27,226 +27,335 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserBookingController {
 
-	private final UserBookingService userBookingService;
+    private final UserBookingService userBookingService;
 
-	// Public Razorpay Key ID
-	// Safe to send to frontend
-	@Value("${razorpay.key.id}")
-	private String razorpayKeyId;
+    // Razorpay public Key ID
+    @Value("${razorpay.key.id}")
+    private String razorpayKeyId;
 
-	// =========================================
-	// My Bookings
-	// =========================================
+    // =========================================
+    // My Bookings
+    // =========================================
 
-	@GetMapping
-	public String getBookings(HttpSession session, Model model) {
+    @GetMapping
+    public String getBookings(
+            HttpSession session,
+            Model model) {
 
-		Integer userId = (Integer) session.getAttribute("userId");
+        Integer userId =
+                (Integer) session.getAttribute("userId");
 
-		if (userId == null) {
-			return "redirect:/user/login";
-		}
+        if (userId == null) {
+            return "redirect:/user/login";
+        }
 
-		List<Booking> bookings = userBookingService.getUserBookings(userId);
+        List<Booking> bookings =
+                userBookingService.getUserBookings(userId);
 
-		model.addAttribute("bookings", bookings);
+        model.addAttribute(
+                "bookings",
+                bookings
+        );
 
-		return "user/booking";
-	}
+        return "user/booking";
+    }
 
-	// =========================================
-	// Booking Page / Available Slots
-	// =========================================
+    // =========================================
+    // Booking Page / Available Slots
+    // =========================================
 
-	@GetMapping("/ground/{groundId}")
-	public String bookingPage(
+    @GetMapping("/ground/{groundId}")
+    public String bookingPage(
 
-			@PathVariable Integer groundId,
+            @PathVariable Integer groundId,
 
-			@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd")
+            LocalDate date,
 
-			HttpSession session,
+            HttpSession session,
 
-			Model model,
+            Model model,
 
-			RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
 
-		Integer userId = (Integer) session.getAttribute("userId");
+        Integer userId =
+                (Integer) session.getAttribute("userId");
 
-		if (userId == null) {
-			return "redirect:/user/login";
-		}
+        if (userId == null) {
+            return "redirect:/user/login";
+        }
 
-		if (date == null) {
-			date = LocalDate.now();
-		}
+        if (date == null) {
+            date = LocalDate.now();
+        }
 
-		try {
+        try {
 
-			List<BookingSlotDto> slots = userBookingService.getAvailableSlots(groundId, date);
+            List<BookingSlotDto> slots =
+                    userBookingService.getAvailableSlots(
+                            groundId,
+                            date
+                    );
 
-			model.addAttribute("groundId", groundId);
+            model.addAttribute(
+                    "groundId",
+                    groundId
+            );
 
-			model.addAttribute("selectedDate", date);
+            model.addAttribute(
+                    "selectedDate",
+                    date
+            );
 
-			model.addAttribute("slots", slots);
+            model.addAttribute(
+                    "slots",
+                    slots
+            );
 
-			return "user/book-slot";
+            return "user/book-slot";
 
-		} catch (RuntimeException e) {
+        } catch (RuntimeException e) {
 
-			redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    e.getMessage()
+            );
 
-			return "redirect:/user/grounds/" + groundId;
-		}
-	}
+            return "redirect:/user/grounds/" + groundId;
+        }
+    }
 
-	// =========================================
-	// Create Booking + Razorpay Order
-	// =========================================
+    // =========================================
+    // Create Booking + Razorpay Order
+    // =========================================
 
-	@PostMapping("/create")
-	public String createBooking(
+    @PostMapping("/create")
+    public String createBooking(
 
-			@RequestParam Integer groundId,
+            @RequestParam Integer groundId,
 
-			@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate bookingDate,
+            @RequestParam
+            @DateTimeFormat(pattern = "yyyy-MM-dd")
+            LocalDate bookingDate,
 
-			@RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime startTime,
+            @RequestParam
+            @DateTimeFormat(pattern = "HH:mm")
+            LocalTime startTime,
 
-			HttpSession session,
+            HttpSession session,
 
-			Model model,
+            Model model,
 
-			RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
 
-		Integer userId = (Integer) session.getAttribute("userId");
+        Integer userId =
+                (Integer) session.getAttribute("userId");
 
-		System.out.println(groundId);
-		System.out.println(bookingDate);
-		System.out.println(startTime);
-		System.out.println(model);
+        if (userId == null) {
+            return "redirect:/user/login";
+        }
 
-		if (userId == null) {
-			return "redirect:/user/login";
-		}
+        try {
 
-		try {
+            // =========================================
+            // Create Booking + Razorpay Order
+            // =========================================
 
-			// =========================================
-			// Step 1 + 2 (ATOMIC): create booking with
-			// PENDING status AND create the Razorpay order
-			// in a single transaction. If Razorpay order
-			// creation fails, the booking creation is
-			// rolled back too - no orphaned PENDING booking
-			// is left behind.
-			// =========================================
+            Booking booking =
+                    userBookingService
+                            .createBookingAndPaymentOrder(
+                                    userId,
+                                    groundId,
+                                    bookingDate,
+                                    startTime
+                            );
 
-			Booking booking = userBookingService.createBookingAndPaymentOrder(userId, groundId, bookingDate, startTime);
+            // =========================================
+            // Razorpay amount must be in paise
+            // =========================================
 
-			// =========================================
-			// Step 3: Send data to payment page
-			// =========================================
+            long razorpayAmountInPaise =
+                    Math.round(
+                            booking.getTotalAmount() * 100
+                    );
 
-			long razorpayAmountInPaise = Math.round(booking.getTotalAmount() * 100);
+            // =========================================
+            // Send payment data to Thymeleaf
+            // =========================================
 
-			model.addAttribute("booking", booking);
+            model.addAttribute(
+                    "booking",
+                    booking
+            );
 
-			model.addAttribute("razorpayOrderId", booking.getRazorpayOrderId());
+            model.addAttribute(
+                    "razorpayOrderId",
+                    booking.getRazorpayOrderId()
+            );
 
-			model.addAttribute("razorpayAmount", razorpayAmountInPaise);
+            model.addAttribute(
+                    "razorpayAmount",
+                    razorpayAmountInPaise
+            );
 
-			model.addAttribute("razorpayKeyId", razorpayKeyId);
+            model.addAttribute(
+                    "razorpayKeyId",
+                    razorpayKeyId
+            );
 
-			return "user/payment";
+            return "user/payment";
 
-		} catch (RuntimeException e) {
+        } catch (RuntimeException e) {
 
-			redirectAttributes.addFlashAttribute("error", e.getMessage());
+            e.printStackTrace();
 
-			return "redirect:/user/bookings/ground/" + groundId + "?date=" + bookingDate;
-		}
-	}
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    e.getMessage()
+            );
 
-	// =========================================
-	// Verify Razorpay Payment
-	// =========================================
+            return "redirect:/user/bookings/ground/"
+                    + groundId
+                    + "?date="
+                    + bookingDate;
+        }
+    }
 
-	@PostMapping("/verify-payment")
-	public String verifyPayment(
+    // =========================================
+    // Verify Razorpay Payment
+    // =========================================
 
-			@RequestParam Integer bookingId,
+    @PostMapping("/verify-payment")
+    public String verifyPayment(
 
-			@RequestParam String razorpayOrderId,
+            @RequestParam Integer bookingId,
 
-			@RequestParam String razorpayPaymentId,
+            @RequestParam String razorpayOrderId,
 
-			@RequestParam String razorpaySignature,
+            @RequestParam String razorpayPaymentId,
 
-			HttpSession session,
+            @RequestParam String razorpaySignature,
 
-			RedirectAttributes redirectAttributes) {
+            HttpSession session,
 
-		Integer userId = (Integer) session.getAttribute("userId");
+            RedirectAttributes redirectAttributes) {
 
-		if (userId == null) {
-			return "redirect:/user/login";
-		}
+        Integer userId =
+                (Integer) session.getAttribute("userId");
 
-		try {
+        if (userId == null) {
+            return "redirect:/user/login";
+        }
 
-			boolean paymentVerified = userBookingService.verifyPayment(bookingId, userId, razorpayOrderId,
-					razorpayPaymentId, razorpaySignature);
+        try {
 
-			if (paymentVerified) {
+            System.out.println(
+                    "========================================"
+            );
 
-				redirectAttributes.addFlashAttribute("success", "Payment successful! Your booking is confirmed.");
+            System.out.println(
+                    "Razorpay Payment Verification"
+            );
 
-				return "redirect:/user/bookings";
-			}
+            System.out.println(
+                    "Booking ID: " + bookingId
+            );
 
-			redirectAttributes.addFlashAttribute("error", "Payment verification failed.");
+            System.out.println(
+                    "Order ID: " + razorpayOrderId
+            );
 
-			return "redirect:/user/bookings";
+            System.out.println(
+                    "Payment ID: " + razorpayPaymentId
+            );
 
-		} catch (RuntimeException e) {
+            System.out.println(
+                    "Signature received: "
+                            + (razorpaySignature != null)
+            );
 
-			redirectAttributes.addFlashAttribute("error", e.getMessage());
+            System.out.println(
+                    "========================================"
+            );
 
-			return "redirect:/user/bookings";
-		}
-	}
+            boolean paymentVerified =
+                    userBookingService.verifyPayment(
+                            bookingId,
+                            userId,
+                            razorpayOrderId,
+                            razorpayPaymentId,
+                            razorpaySignature
+                    );
 
-	// =========================================
-	// Cancel Booking
-	// =========================================
+            if (paymentVerified) {
 
-	@PostMapping("/cancel/{bookingId}")
-	public String cancelBooking(
+                redirectAttributes.addFlashAttribute(
+                        "success",
+                        "Payment successful! Your booking is confirmed."
+                );
 
-			@PathVariable Integer bookingId,
+            } else {
 
-			HttpSession session,
+                redirectAttributes.addFlashAttribute(
+                        "error",
+                        "Payment verification failed."
+                );
+            }
 
-			RedirectAttributes redirectAttributes) {
+        } catch (RuntimeException e) {
 
-		Integer userId = (Integer) session.getAttribute("userId");
+            e.printStackTrace();
 
-		if (userId == null) {
-			return "redirect:/user/login";
-		}
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    e.getMessage()
+            );
+        }
 
-		try {
+        return "redirect:/user/bookings";
+    }
 
-			userBookingService.cancelBooking(bookingId, userId);
+    // =========================================
+    // Cancel Booking
+    // =========================================
 
-			redirectAttributes.addFlashAttribute("success", "Booking cancelled successfully.");
+    @PostMapping("/cancel/{bookingId}")
+    public String cancelBooking(
 
-		} catch (RuntimeException e) {
+            @PathVariable Integer bookingId,
 
-			redirectAttributes.addFlashAttribute("error", e.getMessage());
-		}
+            HttpSession session,
 
-		return "redirect:/user/bookings";
-	}
+            RedirectAttributes redirectAttributes) {
+
+        Integer userId =
+                (Integer) session.getAttribute("userId");
+
+        if (userId == null) {
+            return "redirect:/user/login";
+        }
+
+        try {
+
+            userBookingService.cancelBooking(
+                    bookingId,
+                    userId
+            );
+
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Booking cancelled successfully."
+            );
+
+        } catch (RuntimeException e) {
+
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    e.getMessage()
+            );
+        }
+
+        return "redirect:/user/bookings";
+    }
 }

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.app.hourbook.dto.booking.BookingSlotDto;
 import com.app.hourbook.enums.BookingStatus;
 import com.app.hourbook.enums.GroundStatus;
+import com.app.hourbook.enums.PaymentStatus;
 import com.app.hourbook.model.AppUserDetails;
 import com.app.hourbook.model.Booking;
 import com.app.hourbook.model.Ground;
@@ -25,7 +26,8 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class UserBookingServiceImpl implements UserBookingService {
+public class UserBookingServiceImpl
+        implements UserBookingService {
 
     private final GroundRepository groundRepository;
 
@@ -45,18 +47,22 @@ public class UserBookingServiceImpl implements UserBookingService {
             Integer groundId,
             LocalDate bookingDate) {
 
-        Ground ground = getBookableGround(groundId);
+        Ground ground =
+                getBookableGround(groundId);
 
         validateBookingDate(bookingDate);
 
-        LocalTime openingTime = ground.getOpeningTime();
+        LocalTime openingTime =
+                ground.getOpeningTime();
 
-        LocalTime closingTime = ground.getClosingTime();
+        LocalTime closingTime =
+                ground.getClosingTime();
 
         Integer slotDuration =
                 ground.getSlotDurationMinutes();
 
-        if (openingTime == null || closingTime == null) {
+        if (openingTime == null
+                || closingTime == null) {
 
             throw new RuntimeException(
                     "Ground operating hours are not configured"
@@ -70,7 +76,8 @@ public class UserBookingServiceImpl implements UserBookingService {
             );
         }
 
-        if (slotDuration == null || slotDuration <= 0) {
+        if (slotDuration == null
+                || slotDuration <= 0) {
 
             slotDuration = 60;
         }
@@ -97,60 +104,71 @@ public class UserBookingServiceImpl implements UserBookingService {
         List<BookingSlotDto> slots =
                 new ArrayList<>();
 
-
         // =========================================
         // Generate Slots
         // =========================================
 
         int openMinutes =
-                openingTime.toSecondOfDay() / 60;
+                openingTime.getHour() * 60
+                        + openingTime.getMinute();
 
         int closeMinutes =
-                closingTime.toSecondOfDay() / 60;
+                closingTime.getHour() * 60
+                        + closingTime.getMinute();
 
-        int current =
-                openMinutes;
+        LocalTime currentTime =
+                openingTime;
 
-        while (current + slotDuration <= closeMinutes) {
+        while (true) {
 
-            int slotEndMinutes =
-                    current + slotDuration;
+            int currentMinutes =
+                    currentTime.getHour() * 60
+                            + currentTime.getMinute();
 
-            LocalTime slotStart =
-                    LocalTime.of(
-                            current / 60,
-                            current % 60
-                    );
+            int endMinutes =
+                    currentMinutes
+                            + slotDuration;
 
-            LocalTime slotEnd =
-                    LocalTime.of(
-                            slotEndMinutes / 60,
-                            slotEndMinutes % 60
-                    );
-
-            boolean available =
-                    !bookedStartTimes.contains(slotStart);
-
-
-            // Disable past slots for today
-
-            if (bookingDate.equals(LocalDate.now())
-                    && !slotStart.isAfter(LocalTime.now())) {
-
-                available = false;
+            if (endMinutes > closeMinutes) {
+                break;
             }
 
+            LocalTime endTime =
+                    currentTime.plusMinutes(
+                            slotDuration
+                    );
 
-            slots.add(
-                    new BookingSlotDto(
-                            slotStart,
-                            slotEnd,
-                            available
-                    )
-            );
+            boolean booked =
+                    bookedStartTimes.contains(
+                            currentTime
+                    );
 
-            current =
-                    slotEndMinutes;
+            boolean pastSlot = false;
+
+            if (bookingDate.equals(LocalDate.now())) {
+
+                pastSlot =
+                        currentTime.isBefore(
+                                LocalTime.now()
+                        );
+            }
+
+            boolean available =
+                    !booked && !pastSlot;
+
+            BookingSlotDto slot =
+                    new BookingSlotDto();
+
+            slot.setStartTime(currentTime);
+            slot.setEndTime(endTime);
+            slot.setAvailable(available);
+
+            slots.add(slot);
+
+            currentTime =
+                    currentTime.plusMinutes(
+                            slotDuration
+                    );
         }
 
         return slots;
@@ -179,24 +197,7 @@ public class UserBookingServiceImpl implements UserBookingService {
 
 
     // =========================================
-    // Create Booking + Razorpay Order (ATOMIC)
-    // =========================================
-    //
-    // Combines booking creation and Razorpay order
-    // creation into a SINGLE transaction. If Razorpay
-    // order creation throws (network issue, invalid
-    // keys, Razorpay downtime, etc.), the entire
-    // transaction - including the booking INSERT -
-    // is rolled back. This prevents orphaned PENDING
-    // bookings that would otherwise silently block
-    // the slot for every other user forever.
-    //
-    // NOTE: this calls the private helper methods
-    // directly (not the public createBooking() /
-    // createPaymentOrder()) because calling an
-    // @Transactional method on "this" from within the
-    // same class bypasses Spring's proxy and would NOT
-    // actually join/propagate the outer transaction.
+    // Create Booking + Razorpay Order
     // =========================================
 
     @Override
@@ -221,6 +222,10 @@ public class UserBookingServiceImpl implements UserBookingService {
     }
 
 
+    // =========================================
+    // Build Booking
+    // =========================================
+
     private Booking buildAndSaveBooking(
             Integer userId,
             Integer groundId,
@@ -240,39 +245,44 @@ public class UserBookingServiceImpl implements UserBookingService {
                                 )
                         );
 
+        if (ground.getOpeningTime() == null
+                || ground.getClosingTime() == null) {
 
-        // =========================================
-        // Slot Duration
-        // =========================================
+            throw new RuntimeException(
+                    "Ground operating hours are not configured"
+            );
+        }
 
         Integer slotDuration =
                 ground.getSlotDurationMinutes();
 
-        if (slotDuration == null || slotDuration <= 0) {
+        if (slotDuration == null
+                || slotDuration <= 0) {
 
             slotDuration = 60;
         }
 
-
         LocalTime endTime =
-                startTime.plusMinutes(slotDuration);
-
+                startTime.plusMinutes(
+                        slotDuration
+                );
 
         // =========================================
         // Validate Ground Hours
         // =========================================
 
-        if (startTime.isBefore(ground.getOpeningTime())
-                || endTime.isAfter(ground.getClosingTime())) {
+        if (startTime.isBefore(
+                ground.getOpeningTime())
+                || endTime.isAfter(
+                        ground.getClosingTime())) {
 
             throw new RuntimeException(
                     "Selected slot is outside ground operating hours"
             );
         }
 
-
         // =========================================
-        // Check Slot Availability Again
+        // Check Slot Availability
         // =========================================
 
         List<BookingStatus> blockingStatuses =
@@ -297,15 +307,15 @@ public class UserBookingServiceImpl implements UserBookingService {
             );
         }
 
-
         // =========================================
-        // Calculate Price
+        // Price
         // =========================================
 
         Double pricePerHour =
                 ground.getPricePerHour();
 
-        if (pricePerHour == null) {
+        if (pricePerHour == null
+                || pricePerHour <= 0) {
 
             throw new RuntimeException(
                     "Ground price is not configured"
@@ -316,7 +326,6 @@ public class UserBookingServiceImpl implements UserBookingService {
                 pricePerHour
                         * slotDuration
                         / 60.0;
-
 
         // =========================================
         // Create Booking
@@ -329,24 +338,39 @@ public class UserBookingServiceImpl implements UserBookingService {
 
         booking.setGround(ground);
 
-        booking.setBookingDate(bookingDate);
+        booking.setBookingDate(
+                bookingDate
+        );
 
-        booking.setStartTime(startTime);
+        booking.setStartTime(
+                startTime
+        );
 
-        booking.setEndTime(endTime);
+        booking.setEndTime(
+                endTime
+        );
 
-        booking.setPricePerHour(pricePerHour);
+        booking.setPricePerHour(
+                pricePerHour
+        );
 
-        booking.setTotalAmount(totalAmount);
+        booking.setTotalAmount(
+                totalAmount
+        );
 
-        // Booking is waiting for payment
-
+        // Waiting for payment
         booking.setStatus(
                 BookingStatus.PENDING
         );
 
+        // Payment order will be created next
+        booking.setPaymentStatus(
+                PaymentStatus.CREATED
+        );
 
-        return bookingRepository.save(booking);
+        return bookingRepository.save(
+                booking
+        );
     }
 
 
@@ -361,13 +385,14 @@ public class UserBookingServiceImpl implements UserBookingService {
             Integer userId) {
 
         Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Booking not found"
-                                )
-                        );
-
+                bookingRepository.findById(
+                        bookingId
+                )
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Booking not found"
+                        )
+                );
 
         // =========================================
         // Security Check
@@ -382,11 +407,18 @@ public class UserBookingServiceImpl implements UserBookingService {
             );
         }
 
-        return attachPaymentOrder(booking);
+        return attachPaymentOrder(
+                booking
+        );
     }
 
 
-    private Order attachPaymentOrder(Booking booking) {
+    // =========================================
+    // Attach Razorpay Order
+    // =========================================
+
+    private Order attachPaymentOrder(
+            Booking booking) {
 
         // =========================================
         // Check Booking Status
@@ -408,19 +440,18 @@ public class UserBookingServiceImpl implements UserBookingService {
             );
         }
 
-
         // =========================================
-        // Prevent Duplicate Razorpay Order
+        // Reuse Existing Razorpay Order
         // =========================================
 
         if (booking.getRazorpayOrderId() != null
-                && !booking.getRazorpayOrderId().isBlank()) {
+                && !booking.getRazorpayOrderId()
+                        .isBlank()) {
 
             throw new RuntimeException(
-                    "Payment order already exists for this booking"
+                    "Payment order already exists for this booking. Please continue with the existing payment."
             );
         }
-
 
         // =========================================
         // Create Razorpay Order
@@ -435,19 +466,35 @@ public class UserBookingServiceImpl implements UserBookingService {
                         receipt
                 );
 
+        if (razorpayOrder == null) {
+
+            throw new RuntimeException(
+                    "Razorpay did not return an order"
+            );
+        }
 
         String razorpayOrderId =
                 razorpayOrder.get("id");
 
+        if (razorpayOrderId == null
+                || razorpayOrderId.isBlank()) {
 
-        // Save Razorpay Order ID
+            throw new RuntimeException(
+                    "Invalid Razorpay order ID"
+            );
+        }
 
         booking.setRazorpayOrderId(
                 razorpayOrderId
         );
 
-        bookingRepository.save(booking);
+        booking.setPaymentStatus(
+                PaymentStatus.CREATED
+        );
 
+        bookingRepository.save(
+                booking
+        );
 
         return razorpayOrder;
     }
@@ -466,14 +513,47 @@ public class UserBookingServiceImpl implements UserBookingService {
             String razorpayPaymentId,
             String razorpaySignature) {
 
-        Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Booking not found"
-                                )
-                        );
+        // =========================================
+        // Validate Request
+        // =========================================
 
+        if (razorpayOrderId == null
+                || razorpayOrderId.isBlank()) {
+
+            throw new RuntimeException(
+                    "Razorpay order ID is missing"
+            );
+        }
+
+        if (razorpayPaymentId == null
+                || razorpayPaymentId.isBlank()) {
+
+            throw new RuntimeException(
+                    "Razorpay payment ID is missing"
+            );
+        }
+
+        if (razorpaySignature == null
+                || razorpaySignature.isBlank()) {
+
+            throw new RuntimeException(
+                    "Razorpay signature is missing"
+            );
+        }
+
+        // =========================================
+        // Find Booking
+        // =========================================
+
+        Booking booking =
+                bookingRepository.findById(
+                        bookingId
+                )
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Booking not found"
+                        )
+                );
 
         // =========================================
         // Security Check
@@ -488,9 +568,8 @@ public class UserBookingServiceImpl implements UserBookingService {
             );
         }
 
-
         // =========================================
-        // Verify Razorpay Order
+        // Verify Order ID
         // =========================================
 
         if (booking.getRazorpayOrderId() == null
@@ -502,19 +581,18 @@ public class UserBookingServiceImpl implements UserBookingService {
             );
         }
 
-
         // =========================================
-        // Check Already Paid
+        // Already Paid Check
         // =========================================
 
         if (booking.getRazorpayPaymentId() != null
-                && !booking.getRazorpayPaymentId().isBlank()) {
+                && !booking.getRazorpayPaymentId()
+                        .isBlank()) {
 
             throw new RuntimeException(
                     "Payment already completed"
             );
         }
-
 
         // =========================================
         // Verify Signature
@@ -527,17 +605,23 @@ public class UserBookingServiceImpl implements UserBookingService {
                         razorpaySignature
                 );
 
-
         if (!verified) {
+
+            booking.setPaymentStatus(
+                    PaymentStatus.FAILED
+            );
+
+            bookingRepository.save(
+                    booking
+            );
 
             throw new RuntimeException(
                     "Payment verification failed"
             );
         }
 
-
         // =========================================
-        // Save Payment Details
+        // Save Razorpay Payment Details
         // =========================================
 
         booking.setRazorpayPaymentId(
@@ -548,16 +632,57 @@ public class UserBookingServiceImpl implements UserBookingService {
                 razorpaySignature
         );
 
+        // =========================================
+        // IMPORTANT FIX
+        // =========================================
 
-        // Payment successful
+        booking.setPaymentStatus(
+                PaymentStatus.PAID
+        );
 
         booking.setStatus(
                 BookingStatus.CONFIRMED
         );
 
+        bookingRepository.save(
+                booking
+        );
 
-        bookingRepository.save(booking);
+        System.out.println(
+                "========================================"
+        );
 
+        System.out.println(
+                "PAYMENT VERIFIED SUCCESSFULLY"
+        );
+
+        System.out.println(
+                "Booking ID: " + booking.getId()
+        );
+
+        System.out.println(
+                "Order ID: "
+                        + booking.getRazorpayOrderId()
+        );
+
+        System.out.println(
+                "Payment ID: "
+                        + booking.getRazorpayPaymentId()
+        );
+
+        System.out.println(
+                "Payment Status: "
+                        + booking.getPaymentStatus()
+        );
+
+        System.out.println(
+                "Booking Status: "
+                        + booking.getStatus()
+        );
+
+        System.out.println(
+                "========================================"
+        );
 
         return true;
     }
@@ -568,6 +693,7 @@ public class UserBookingServiceImpl implements UserBookingService {
     // =========================================
 
     @Override
+    @Transactional(readOnly = true)
     public List<Booking> getUserBookings(
             Integer userId) {
 
@@ -589,55 +715,47 @@ public class UserBookingServiceImpl implements UserBookingService {
             Integer userId) {
 
         Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Booking not found"
-                                )
-                        );
-
-
-        // User can cancel only own booking
+                bookingRepository.findById(
+                        bookingId
+                )
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Booking not found"
+                        )
+                );
 
         if (!booking.getUser()
                 .getId()
                 .equals(userId)) {
 
             throw new RuntimeException(
-                    "You are not authorized to cancel this booking"
+                    "You are not authorized for this booking"
             );
         }
-
-
-        // Already cancelled
 
         if (booking.getStatus()
                 == BookingStatus.CANCELLED) {
 
             throw new RuntimeException(
-                    "This booking is already cancelled"
+                    "Booking is already cancelled"
             );
         }
-
-
-        // Completed booking cannot be cancelled
 
         if (booking.getStatus()
                 == BookingStatus.COMPLETED) {
 
             throw new RuntimeException(
-                    "Completed bookings cannot be cancelled"
+                    "Completed booking cannot be cancelled"
             );
         }
-
-
-        // Cancel Booking
 
         booking.setStatus(
                 BookingStatus.CANCELLED
         );
 
-        bookingRepository.save(booking);
+        bookingRepository.save(
+                booking
+        );
     }
 
 
@@ -648,16 +766,32 @@ public class UserBookingServiceImpl implements UserBookingService {
     private Ground getBookableGround(
             Integer groundId) {
 
-        return groundRepository
-                .findByIdAndStatusAndIsActiveTrue(
-                        groundId,
-                        GroundStatus.APPROVED
+        Ground ground =
+                groundRepository.findById(
+                        groundId
                 )
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Ground is not available for booking"
+                                "Ground not found"
                         )
                 );
+
+        if (ground.getStatus()
+                != GroundStatus.APPROVED) {
+
+            throw new RuntimeException(
+                    "This ground is not approved"
+            );
+        }
+
+        if (!ground.getIsActive()) {
+
+            throw new RuntimeException(
+                    "This ground is currently inactive"
+            );
+        }
+
+        return ground;
     }
 
 
@@ -676,13 +810,11 @@ public class UserBookingServiceImpl implements UserBookingService {
         }
 
         if (bookingDate.isBefore(
-                LocalDate.now()
-        )) {
+                LocalDate.now())) {
 
             throw new RuntimeException(
-                    "Past dates cannot be booked"
+                    "Cannot book a past date"
             );
         }
     }
-
 }

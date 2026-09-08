@@ -31,7 +31,6 @@ import lombok.Setter;
 @Table(name = "ground_details")
 @Getter
 @Setter
-
 @NoArgsConstructor
 public class Ground {
 
