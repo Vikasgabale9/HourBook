@@ -5,31 +5,49 @@
 
 <div th:fragment="header">
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
 
-    <div class="container-fluid">
+        <div class="container-fluid">
 
-        <span class="navbar-brand fw-bold">
-
-            User Panel
-
-        </span>
-
-        <div class="ms-auto">
-
-            <span class="me-3">
-
-                Welcome,
-
-                <strong th:text="${session.userName}"></strong>
-
+            <span class="navbar-brand fw-bold">
+                User Panel
             </span>
+
+            <div class="ms-auto d-flex align-items-center">
+
+                <span class="me-3">
+                    Welcome,
+                    <strong th:text="${session.userName}">
+                    </strong>
+                </span>
+
+
+                <!-- Profile Image -->
+
+                <img th:if="${session.profileImage != null and !session.profileImage.isEmpty()}"
+                     th:src="@{${session.profileImage}}"
+                     alt="User Profile"
+                     class="rounded-circle border"
+                     width="45"
+                     height="45"
+                     style="object-fit: cover;">
+
+
+                <!-- Default Profile Image -->
+
+                <img th:unless="${session.profileImage != null and !session.profileImage.isEmpty()}"
+                     src="https://placehold.co/45x45"
+                     alt="Default Profile"
+                     class="rounded-circle border"
+                     width="45"
+                     height="45"
+                     style="object-fit: cover;">
+
+            </div>
 
         </div>
 
-    </div>
-
-</nav>
+    </nav>
 
 </div>
 

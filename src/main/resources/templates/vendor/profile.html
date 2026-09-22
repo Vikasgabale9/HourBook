@@ -20,16 +20,20 @@
 
 <body class="bg-light">
 
-<div th:replace="vendor/fragments/sidebar :: sidebar"></div>
+<!-- Sidebar -->
+<div th:replace="~{vendor/fragments/sidebar :: sidebar}"></div>
 
+
+<!-- Main Content -->
 <div style="margin-left:260px;">
 
-    <div th:replace="vendor/fragments/header :: header"></div>
+    <!-- Header -->
+    <div th:replace="~{vendor/fragments/header :: header}"></div>
+
 
     <div class="container-fluid p-4">
 
         <!-- Page Title -->
-
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <div>
@@ -56,42 +60,63 @@
 
         </div>
 
+
         <div class="row">
 
             <!-- Profile Card -->
-
             <div class="col-lg-4">
 
                 <div class="card shadow-sm border-0">
 
                     <div class="card-body text-center">
 
-                        <img th:if="${profile.profileImage != null}"
-                             th:src="@{${profile.profileImage}}"
+
+                        <!-- Profile Image -->
+                        <img th:if="${vendor.profileImage != null}"
+                             th:src="@{${vendor.profileImage}}"
                              class="rounded-circle mb-3"
                              width="140"
-                             height="140">
+                             height="140"
+                             style="object-fit: cover;"
+                             alt="Vendor Profile">
 
-                        <img th:unless="${profile.profileImage != null}"
+
+                        <!-- Default Image -->
+                        <img th:unless="${vendor.profileImage != null}"
                              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
                              class="rounded-circle mb-3"
                              width="140"
-                             height="140">
+                             height="140"
+                             style="object-fit: cover;"
+                             alt="Default Profile">
 
-                        <h4 th:text="${profile.fullName}"></h4>
+
+                        <!-- Name -->
+                        <h4 th:text="${vendor.fullName}">
+                            Vendor Name
+                        </h4>
+
 
                         <p class="text-muted">
                             Vendor
                         </p>
 
+
+                        <!-- Active -->
                         <span class="badge bg-success"
-                              th:if="${profile.active}">
+                              th:if="${vendor.active}">
+
                             Active
+
                         </span>
 
+
+                        <!-- Inactive -->
                         <span class="badge bg-danger"
-                              th:unless="${profile.active}">
+                              th:unless="${vendor.active}">
+
                             Inactive
+
                         </span>
 
                     </div>
@@ -100,17 +125,20 @@
 
             </div>
 
-            <!-- Details -->
 
+            <!-- Details -->
             <div class="col-lg-8">
 
                 <div class="card shadow-sm border-0">
 
                     <div class="card-header bg-primary text-white">
 
+                        <i class="bi bi-person-vcard me-2"></i>
+
                         Personal Information
 
                     </div>
+
 
                     <div class="card-body">
 
@@ -118,54 +146,100 @@
 
                             <tbody>
 
+
+                            <!-- Vendor ID -->
                             <tr>
 
-                                <th width="30%">Vendor ID</th>
+                                <th width="30%">
+                                    Vendor ID
+                                </th>
 
-                                <td th:text="${profile.vendorId}"></td>
+                                <td th:text="${vendor.vendorAuth.id}">
+                                    -
+                                </td>
 
                             </tr>
 
+
+                            <!-- Profile ID -->
                             <tr>
 
-                                <th>Full Name</th>
+                                <th>
+                                    Profile ID
+                                </th>
 
-                                <td th:text="${profile.fullName}"></td>
+                                <td th:text="${vendor.id}">
+                                    -
+                                </td>
 
                             </tr>
 
+
+                            <!-- Full Name -->
                             <tr>
 
-                                <th>Email</th>
+                                <th>
+                                    Full Name
+                                </th>
 
-                                <td th:text="${profile.email}"></td>
+                                <td th:text="${vendor.fullName}">
+                                    -
+                                </td>
 
                             </tr>
 
+
+                            <!-- Email -->
                             <tr>
 
-                                <th>Phone Number</th>
+                                <th>
+                                    Email
+                                </th>
 
-                                <td th:text="${profile.phoneNumber}"></td>
+                                <td th:text="${vendor.email}">
+                                    -
+                                </td>
 
                             </tr>
 
+
+                            <!-- Phone Number -->
                             <tr>
 
-                                <th>Email Verification</th>
+                                <th>
+                                    Phone Number
+                                </th>
+
+                                <td th:text="${vendor.phoneNumber}">
+                                    -
+                                </td>
+
+                            </tr>
+
+
+                            <!-- Email Verification -->
+                            <tr>
+
+                                <th>
+                                    Email Verification
+                                </th>
 
                                 <td>
 
-                                    <span class="badge bg-success"
-                                          th:if="${profile.emailVerified}">
 
+                                    <span class="badge bg-success"
+                                          th:if="${vendor.emailVerified}">
+
+                                        <i class="bi bi-check-circle me-1"></i>
                                         Verified
 
                                     </span>
 
-                                    <span class="badge bg-danger"
-                                          th:unless="${profile.emailVerified}">
 
+                                    <span class="badge bg-danger"
+                                          th:unless="${vendor.emailVerified}">
+
+                                        <i class="bi bi-x-circle me-1"></i>
                                         Not Verified
 
                                     </span>
@@ -174,22 +248,30 @@
 
                             </tr>
 
+
+                            <!-- Phone Verification -->
                             <tr>
 
-                                <th>Phone Verification</th>
+                                <th>
+                                    Phone Verification
+                                </th>
 
                                 <td>
 
-                                    <span class="badge bg-success"
-                                          th:if="${profile.phoneVerified}">
 
+                                    <span class="badge bg-success"
+                                          th:if="${vendor.vendorAuth.verified}">
+
+                                        <i class="bi bi-check-circle me-1"></i>
                                         Verified
 
                                     </span>
 
-                                    <span class="badge bg-danger"
-                                          th:unless="${profile.phoneVerified}">
 
+                                    <span class="badge bg-danger"
+                                          th:unless="${vendor.vendorAuth.verified}">
+
+                                        <i class="bi bi-x-circle me-1"></i>
                                         Not Verified
 
                                     </span>
@@ -198,25 +280,38 @@
 
                             </tr>
 
+
+                            <!-- Account Status -->
                             <tr>
 
-                                <th>Account Status</th>
+                                <th>
+                                    Account Status
+                                </th>
 
                                 <td>
 
+
                                     <span class="badge bg-success"
-                                          th:if="${profile.active}">
+                                          th:if="${vendor.active}">
+
+                                        <i class="bi bi-check-circle me-1"></i>
                                         Active
+
                                     </span>
 
+
                                     <span class="badge bg-danger"
-                                          th:unless="${profile.active}">
+                                          th:unless="${vendor.active}">
+
+                                        <i class="bi bi-x-circle me-1"></i>
                                         Inactive
+
                                     </span>
 
                                 </td>
 
                             </tr>
+
 
                             </tbody>
 
@@ -232,11 +327,15 @@
 
     </div>
 
-    <div th:replace="vendor/fragments/footer :: footer"></div>
+
+    <!-- Footer -->
+    <div th:replace="~{vendor/fragments/footer :: footer}"></div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
 
 </body>
 

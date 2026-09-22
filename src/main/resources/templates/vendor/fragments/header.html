@@ -24,10 +24,23 @@
 
                 </div>
 
-                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                <!-- Real Vendor Profile Image -->
+                <img th:if="${session.profileImage != null and !session.profileImage.isEmpty()}"
+                     th:src="@{${session.profileImage}}"
+                     alt="Vendor Profile"
                      class="rounded-circle border"
                      width="45"
-                     height="45">
+                     height="45"
+                     style="object-fit: cover;">
+
+                <!-- Default Profile Image -->
+                <img th:unless="${session.profileImage != null and !session.profileImage.isEmpty()}"
+                     src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                     alt="Default Profile"
+                     class="rounded-circle border"
+                     width="45"
+                     height="45"
+                     style="object-fit: cover;">
 
             </div>
 

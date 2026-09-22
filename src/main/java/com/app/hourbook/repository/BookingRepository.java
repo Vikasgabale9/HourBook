@@ -62,4 +62,19 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
          Integer vendorId,
          BookingStatus status
  );
+ 
+ long countByUser_Id(Integer userId);
+
+ long countByUser_IdAndStatus(
+         Integer userId,
+         BookingStatus status
+ );
+
+ long countByUser_IdAndBookingDateGreaterThanEqualAndStatus(
+         Integer userId,
+         LocalDate bookingDate,
+         BookingStatus status
+ );
+ 
+ long countByGround_Vendor_Id(Integer vendorId);
 }

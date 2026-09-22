@@ -7,6 +7,7 @@ import com.app.hourbook.dto.VendorDashboardResponseDto;
 import com.app.hourbook.enums.GroundStatus;
 import com.app.hourbook.exception.ResourceNotFoundException;
 import com.app.hourbook.model.VendorDetails;
+import com.app.hourbook.repository.BookingRepository;
 import com.app.hourbook.repository.GroundRepository;
 import com.app.hourbook.repository.VendorDetailsRepository;
 
@@ -19,6 +20,9 @@ public class VendorDashboardService {
     @Autowired
     private GroundRepository groundRepository;
 
+    @Autowired
+    private BookingRepository bookingRepository;
+
     public VendorDashboardResponseDto getDashboard(Integer vendorId) {
 
         VendorDetails vendor = vendorDetailsRepository
@@ -26,24 +30,37 @@ public class VendorDashboardService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Vendor not found"));
 
-        VendorDashboardResponseDto dto = new VendorDashboardResponseDto();
+        VendorDashboardResponseDto dto =
+                new VendorDashboardResponseDto();
 
         // ==========================
         // Vendor Information
         // ==========================
 
-        dto.setVendorId(vendor.getVendorAuth().getId());
-        dto.setVendorName(vendor.getFullName());
-        dto.setVendorEmail(vendor.getEmail());
-        dto.setPhoneNumber(vendor.getPhoneNumber());
+        dto.setVendorId(
+                vendor.getVendorAuth().getId());
 
-        dto.setEmailVerified(vendor.isEmailVerified());
-        dto.setPhoneVerified(vendor.getVendorAuth().isVerified());
+        dto.setVendorName(
+                vendor.getFullName());
 
-        dto.setVendorActive(vendor.isActive());
+        dto.setVendorEmail(
+                vendor.getEmail());
 
-        // Until KYC module is integrated
-        dto.setKycStatus(vendor.getKycStatus());
+        dto.setPhoneNumber(
+                vendor.getPhoneNumber());
+
+        dto.setEmailVerified(
+                vendor.isEmailVerified());
+
+        dto.setPhoneVerified(
+                vendor.getVendorAuth().isVerified());
+
+        dto.setVendorActive(
+                vendor.isActive());
+
+        dto.setKycStatus(
+                vendor.getKycStatus());
+
 
         // ==========================
         // Ground Statistics
@@ -53,10 +70,12 @@ public class VendorDashboardService {
                 groundRepository.countByVendor_Id(vendorId));
 
         dto.setActiveGrounds(
-                groundRepository.countByVendor_IdAndIsActiveTrue(vendorId));
+                groundRepository.countByVendor_IdAndIsActiveTrue(
+                        vendorId));
 
         dto.setInactiveGrounds(
-                groundRepository.countByVendor_IdAndIsActiveFalse(vendorId));
+                groundRepository.countByVendor_IdAndIsActiveFalse(
+                        vendorId));
 
         dto.setPendingGrounds(
                 groundRepository.countByVendor_IdAndStatus(
@@ -73,17 +92,22 @@ public class VendorDashboardService {
                         vendorId,
                         GroundStatus.REJECTED));
 
+
         // ==========================
         // Booking Module
         // ==========================
 
-        dto.setTotalBookings(0l);
+        dto.setTotalBookings(
+                bookingRepository.countByGround_Vendor_Id(
+                        vendorId));
+
 
         // ==========================
         // Revenue Module
         // ==========================
 
         dto.setTotalRevenue(0.0);
+
 
         return dto;
     }

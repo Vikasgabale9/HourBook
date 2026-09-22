@@ -5,29 +5,44 @@
 
     <meta charset="UTF-8">
 
-    <title>Browse Grounds</title>
+    <title>Browse Grounds - HourBook</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <!-- Bootstrap -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+            rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
-          rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+            rel="stylesheet">
 
 </head>
 
 <body class="bg-light">
 
+
+<!-- ================= SIDEBAR ================= -->
+
 <div th:replace="~{user/fragments/sidebar :: sidebar}"></div>
+
+
+<!-- ================= MAIN CONTENT ================= -->
 
 <div style="margin-left:260px;">
 
+    <!-- Header -->
+
     <div th:replace="~{user/fragments/header :: header}"></div>
+
 
     <div class="container-fluid p-4">
 
-        <!-- Header -->
+
+        <!-- ================= PAGE HEADER ================= -->
 
         <div class="d-flex justify-content-between align-items-center mb-4">
 
@@ -51,29 +66,44 @@
 
         </div>
 
-        <!-- Search -->
 
-        <form class="row g-2 mb-4"
-              method="get"
-              th:action="@{/user/grounds}">
+        <!-- ================= SEARCH ================= -->
 
-            <input type="hidden"
-                   name="size"
-                   th:value="${groundPage.size}">
+        <form
+                class="row g-2 mb-4"
+                method="get"
+                th:action="@{/user/grounds}">
+
+
+            <!-- Preserve page size -->
+
+            <input
+                    type="hidden"
+                    name="size"
+                    th:value="${groundPage.size}">
+
+
+            <!-- Search -->
 
             <div class="col-md-6">
 
-                <input type="text"
-                       class="form-control"
-                       name="search"
-                       placeholder="Search by Ground Name"
-                       th:value="${search}">
+                <input
+                        type="text"
+                        class="form-control"
+                        name="search"
+                        placeholder="Search by Ground Name"
+                        th:value="${search}">
 
             </div>
 
+
+            <!-- Search Button -->
+
             <div class="col-md-2">
 
-                <button class="btn btn-primary w-100">
+                <button
+                        type="submit"
+                        class="btn btn-primary w-100">
 
                     <i class="bi bi-search"></i>
 
@@ -83,10 +113,16 @@
 
             </div>
 
+
+            <!-- Reset -->
+
             <div class="col-md-2">
 
-                <a th:href="@{/user/grounds}"
-                   class="btn btn-outline-secondary w-100">
+                <a
+                        th:href="@{/user/grounds}"
+                        class="btn btn-outline-secondary w-100">
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
 
                     Reset
 
@@ -96,83 +132,145 @@
 
         </form>
 
-        <!-- Cards -->
+
+        <!-- ================= GROUND CARDS ================= -->
 
         <div class="row g-4">
 
-            <div class="col-lg-4 col-md-6"
 
-                 th:each="ground : ${grounds}">
+            <div
+                    class="col-lg-4 col-md-6"
+                    th:each="ground : ${grounds}">
+
 
                 <div class="card shadow-sm h-100 border-0">
 
-                    <img th:if="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
-                         th:src="@{${ground.imageUrls[0]}}"
-                         class="card-img-top"
-                         style="height:220px;object-fit:cover;">
 
-                    <img th:unless="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
-                         src="https://placehold.co/600x400?text=Ground"
-                         class="card-img-top"
-                         style="height:220px;object-fit:cover;">
+                    <!-- ================= GROUND IMAGE ================= -->
+
+                    <img
+                            th:if="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
+                            th:src="@{${ground.imageUrls[0]}}"
+                            class="card-img-top"
+                            style="height:220px;object-fit:cover;"
+                            alt="Ground Image">
+
+
+                    <!-- No Image -->
+
+                    <img
+                            th:unless="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
+                            src="https://placehold.co/600x400?text=Ground"
+                            class="card-img-top"
+                            style="height:220px;object-fit:cover;"
+                            alt="Ground Image">
+
+
+                    <!-- ================= CARD BODY ================= -->
 
                     <div class="card-body">
 
-                        <h4 class="fw-bold"
-                            th:text="${ground.name}"></h4>
+
+                        <!-- Ground Name -->
+
+                        <h4
+                                class="fw-bold"
+                                th:text="${ground.name}">
+
+                            Ground Name
+
+                        </h4>
+
+
+                        <!-- Location -->
 
                         <p class="mb-2">
 
                             <i class="bi bi-geo-alt-fill text-danger"></i>
 
-                            <span th:text="${ground.location}"></span>
+                            <span
+                                    th:text="${ground.location}">
+                                Location
+                            </span>
 
                         </p>
+
+
+                        <!-- Sports -->
 
                         <p class="mb-2">
 
                             <i class="bi bi-dribbble text-success"></i>
 
-                            <span th:text="${ground.sports}"></span>
+                            <span
+                                    th:text="${ground.sports}">
+                                Sports
+                            </span>
 
                         </p>
+
+
+                        <!-- Price -->
 
                         <p class="mb-2">
 
                             <i class="bi bi-currency-rupee"></i>
 
-                            <strong th:text="${ground.pricePerHour}"></strong>
+                            <strong
+                                    th:text="${ground.pricePerHour}">
+                                0
+                            </strong>
 
                             / Hour
 
                         </p>
 
+
+                        <!-- Ground Type -->
+
                         <p class="mb-3">
 
-                            <strong>Type :</strong>
+                            <strong>
+                                Type :
+                            </strong>
 
-                            <span th:text="${ground.type}"></span>
+                            <span
+                                    th:text="${ground.type}">
+                                Ground Type
+                            </span>
 
                         </p>
 
+
+                        <!-- Status -->
+
                         <span class="badge bg-success">
+
+                            <i class="bi bi-check-circle me-1"></i>
 
                             Available
 
                         </span>
 
+
                     </div>
+
+
+                    <!-- ================= CARD FOOTER ================= -->
 
                     <div class="card-footer bg-white border-0">
 
-                        <a th:href="@{/user/grounds/{id}(id=${ground.id})}"
-                           class="btn btn-primary w-100">
+
+                        <a
+                                th:href="@{/user/grounds/{id}(id=${ground.id})}"
+                                class="btn btn-primary w-100">
 
                             <i class="bi bi-eye"></i>
 
                             View Details
 
                         </a>
+
 
                     </div>
 
@@ -182,23 +280,38 @@
 
         </div>
 
-        <!-- No Data -->
 
-        <div class="alert alert-warning mt-4 text-center"
-             th:if="${groundPage.totalElements==0}">
+        <!-- ================= NO DATA ================= -->
+
+        <div
+                class="alert alert-warning mt-4 text-center"
+                th:if="${groundPage.totalElements == 0}">
 
             <h5 class="mb-0">
+
+                <i class="bi bi-exclamation-circle me-2"></i>
 
                 No Grounds Found
 
             </h5>
 
+            <p class="mb-0 mt-2">
+
+                Try searching with a different ground name.
+
+            </p>
+
         </div>
 
-        <!-- Pagination -->
 
-        <div class="mt-5"
-             th:if="${groundPage.totalPages > 1}">
+        <!-- ================= PAGINATION ================= -->
+
+        <div
+                class="mt-5"
+                th:if="${groundPage.totalPages > 1}">
+
+
+            <!-- Page Information -->
 
             <div class="text-center mb-3">
 
@@ -206,30 +319,44 @@
 
                     Page
 
-                    <span th:text="${groundPage.number+1}"></span>
+                    <span
+                            th:text="${groundPage.number + 1}">
+                        1
+                    </span>
 
                     of
 
-                    <span th:text="${groundPage.totalPages}"></span>
+                    <span
+                            th:text="${groundPage.totalPages}">
+                        1
+                    </span>
 
                 </strong>
 
             </div>
 
+
             <nav>
 
                 <ul class="pagination justify-content-center">
 
-                    <!-- Previous -->
 
-                    <li class="page-item"
-                        th:classappend="${groundPage.first}? 'disabled'">
+                    <!-- ================= PREVIOUS ================= -->
 
-                        <a class="page-link"
+                    <li
+                            class="page-item"
+                            th:classappend="${groundPage.first} ? 'disabled'">
 
-                           th:href="@{/user/grounds(page=${groundPage.number-1},
-                                                    size=${groundPage.size},
-                                                    search=${search})}">
+
+                        <a
+                                class="page-link"
+                                th:href="@{/user/grounds(
+                                    page=${groundPage.number - 1},
+                                    size=${groundPage.size},
+                                    search=${search}
+                                )}">
+
+                            <i class="bi bi-chevron-left"></i>
 
                             Previous
 
@@ -237,39 +364,52 @@
 
                     </li>
 
-                    <!-- Pages -->
 
-                    <li class="page-item"
+                    <!-- ================= PAGE NUMBERS ================= -->
 
-                        th:each="i : ${#numbers.sequence(0, groundPage.totalPages-1)}"
+                    <li
+                            class="page-item"
+                            th:each="i : ${#numbers.sequence(
+                                0,
+                                groundPage.totalPages - 1
+                            )}"
+                            th:classappend="${i == groundPage.number} ? 'active'">
 
-                        th:classappend="${i==groundPage.number}? 'active'">
 
-                        <a class="page-link"
+                        <a
+                                class="page-link"
+                                th:text="${i + 1}"
+                                th:href="@{/user/grounds(
+                                    page=${i},
+                                    size=${groundPage.size},
+                                    search=${search}
+                                )}">
 
-                           th:text="${i+1}"
-
-                           th:href="@{/user/grounds(page=${i},
-                                                    size=${groundPage.size},
-                                                    search=${search})}">
+                            1
 
                         </a>
 
                     </li>
 
-                    <!-- Next -->
 
-                    <li class="page-item"
+                    <!-- ================= NEXT ================= -->
 
-                        th:classappend="${groundPage.last}? 'disabled'">
+                    <li
+                            class="page-item"
+                            th:classappend="${groundPage.last} ? 'disabled'">
 
-                        <a class="page-link"
 
-                           th:href="@{/user/grounds(page=${groundPage.number+1},
-                                                    size=${groundPage.size},
-                                                    search=${search})}">
+                        <a
+                                class="page-link"
+                                th:href="@{/user/grounds(
+                                    page=${groundPage.number + 1},
+                                    size=${groundPage.size},
+                                    search=${search}
+                                )}">
 
                             Next
+
+                            <i class="bi bi-chevron-right"></i>
 
                         </a>
 
@@ -281,13 +421,24 @@
 
         </div>
 
+
     </div>
+
+
+    <!-- ================= FOOTER ================= -->
 
     <div th:replace="~{user/fragments/footer :: footer}"></div>
 
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Bootstrap JS -->
+
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
+
 
 </body>
 

@@ -527,6 +527,7 @@
                             <th>
                                 User ID
                             </th>
+							
 
                             <th>
                                 Ground ID
@@ -594,7 +595,7 @@
                             <td>
 
                                 <span th:if="${booking.user != null}"
-                                      th:text="'User #' + ${booking.user.id}">
+                                      th:text=" ${booking.user.fullName}">
 
                                     User #1
 

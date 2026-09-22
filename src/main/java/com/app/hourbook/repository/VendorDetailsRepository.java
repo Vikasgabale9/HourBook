@@ -33,4 +33,8 @@ public interface VendorDetailsRepository extends JpaRepository<VendorDetails, In
 
     boolean existsByVendorAuthId(
             Integer vendorId);
+    
+
+    Optional<VendorDetails> findByVendorAuth_Id(Integer vendorId);
+    
 }

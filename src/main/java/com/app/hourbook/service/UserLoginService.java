@@ -15,41 +15,101 @@ public class UserLoginService {
 
     private final AppUserDetailsRepository userRepository;
 
-  
-
     public AppUserDetails login(UserLoginRequestDto request) {
 
-    	AppUserDetails user;
+        if (request.getLoginId() == null ||
+                request.getLoginId().isBlank()) {
 
-    	if (request.getLoginId().contains("@")) {
+            throw new InvalidCredentialsException(
+                    "Email or phone number is required"
+            );
+        }
 
-    	    user = userRepository.findByEmail(request.getLoginId())
-    	            .orElseThrow(() ->
-    	                    new InvalidCredentialsException("Invalid Email"));
+        if (request.getPassword() == null ||
+                request.getPassword().isBlank()) {
 
-    	} else {
+            throw new InvalidCredentialsException(
+                    "Password is required"
+            );
+        }
 
-    	    user = userRepository.findByAppUserPhoneNumber(request.getLoginId())
-    	            .orElseThrow(() ->
-    	                    new InvalidCredentialsException("Invalid Phone Number"));
-    	}
+        AppUserDetails user;
 
+        /*
+         * Email login
+         */
+        if (request.getLoginId().contains("@")) {
+
+            user = userRepository
+                    .findByEmail(request.getLoginId())
+                    .orElseThrow(() ->
+                            new InvalidCredentialsException(
+                                    "Invalid email or password"
+                            )
+                    );
+
+        }
+
+        /*
+         * Phone login
+         */
+        else {
+
+            user = userRepository
+                    .findByAppUserPhoneNumber(
+                            request.getLoginId()
+                    )
+                    .orElseThrow(() ->
+                            new InvalidCredentialsException(
+                                    "Invalid phone number or password"
+                            )
+                    );
+        }
+
+        /*
+         * Account active check
+         */
         if (!user.isActive()) {
 
-            throw new InvalidCredentialsException("Your account is inactive.");
+            throw new InvalidCredentialsException(
+                    "Your account is inactive."
+            );
         }
 
+        /*
+         * Email verification check
+         */
         if (!user.isEmailVerified()) {
 
-            throw new InvalidCredentialsException("Please verify your email first.");
+            throw new InvalidCredentialsException(
+                    "Please verify your email first."
+            );
         }
 
+        /*
+         * Mobile verification check
+         */
         if (!user.getAppUser().isVerified()) {
 
-            throw new InvalidCredentialsException("Please verify your mobile number.");
+            throw new InvalidCredentialsException(
+                    "Please verify your mobile number."
+            );
+        }
+
+        /*
+         * PASSWORD CHECK
+         *
+         * Password is compared with the password
+         * stored in AppUserDetails.
+         */
+        if (!request.getPassword()
+                .equals(user.getPassword())) {
+
+            throw new InvalidCredentialsException(
+                    "Invalid email/phone number or password"
+            );
         }
 
         return user;
     }
-
 }

@@ -1,69 +1,106 @@
 package com.app.hourbook.controller.vendor;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.app.hourbook.dto.VendorDashLoginReq;
 import com.app.hourbook.exception.InvalidCredentialsException;
 import com.app.hourbook.model.VendorDetails;
-import com.app.hourbook.service.VendorLoginService;
+import com.app.hourbook.service.VendorMvcLoginService;
 
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/vendor")
+@RequiredArgsConstructor
 public class VendorLoginController {
 
-    @Autowired
-    private VendorLoginService vendorLoginService;
+    private final VendorMvcLoginService vendorMvcLoginService;
+
+    // =========================================================
+    // LOGIN PAGE
+    // =========================================================
 
     @GetMapping("/login")
-    public String loginPage(HttpSession session) {
+    public String loginPage(
+            HttpSession session,
+            Model model) {
 
         if (session.getAttribute("vendorId") != null) {
+
             return "redirect:/vendor/dashboard";
         }
 
         return "vendor/login";
     }
 
+    // =========================================================
+    // LOGIN
+    // =========================================================
+
     @PostMapping("/login")
-    public String login(@ModelAttribute VendorDashLoginReq request,
-                        HttpSession session,
-                        Model model) {
+    public String login(
+            @ModelAttribute VendorDashLoginReq request,
+            HttpSession session,
+            Model model) {
 
         try {
 
-            VendorDetails vendor = vendorLoginService.login(request);
+            VendorDetails vendor =
+                    vendorMvcLoginService.login(request);
 
-            session.setAttribute("vendorId",
-                    vendor.getVendorAuth().getId());
+            // -------------------------------------------------
+            // Create MVC session
+            // -------------------------------------------------
 
-            session.setAttribute("vendorName",
-                    vendor.getFullName());
+            session.setAttribute(
+                    "vendorId",
+                    vendor.getVendorAuth().getId()
+            );
 
-            session.setAttribute("vendorEmail",
-                    vendor.getEmail());
+            session.setAttribute(
+                    "vendorName",
+                    vendor.getFullName()
+            );
+
+            session.setAttribute(
+                    "vendorEmail",
+                    vendor.getEmail()
+            );
+
+            session.setAttribute(
+                    "profileImage",
+                    vendor.getProfileImage()
+            );
 
             return "redirect:/vendor/dashboard";
 
         } catch (InvalidCredentialsException ex) {
 
-            model.addAttribute("error", ex.getMessage());
+            model.addAttribute(
+                    "error",
+                    ex.getMessage()
+            );
 
             return "vendor/login";
         }
-
     }
 
+    // =========================================================
+    // LOGOUT
+    // =========================================================
+
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(
+            HttpSession session) {
 
         session.invalidate();
 
         return "redirect:/vendor/login";
     }
-
 }

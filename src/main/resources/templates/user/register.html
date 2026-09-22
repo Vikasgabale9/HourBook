@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>User Registration | HourBook</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        .register-card {
+            width: 500px;
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .register-header {
+            background: #2563eb;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+            margin-bottom: 5px;
+        }
+
+        .brand-name {
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .register-subtitle {
+            opacity: .9;
+            margin-top: 4px;
+        }
+
+        .register-body {
+            padding: 32px;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .form-control {
+            height: 48px;
+            border-radius: 10px;
+        }
+
+        .input-group-text {
+            background: white;
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .register-button {
+            height: 48px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .login-link {
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .home-link {
+            text-decoration: none;
+        }
+
+        .profile-upload {
+            border: 1px dashed #ced4da;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fafbfc;
+        }
+
+        .profile-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: none;
+            margin: 10px auto;
+            border: 3px solid #e9ecef;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="card register-card">
+
+    <!-- Header -->
+
+    <div class="register-header">
+
+        <div class="logo-icon">
+            <i class="bi bi-calendar-check-fill"></i>
+        </div>
+
+        <div class="brand-name">
+            HourBook
+        </div>
+
+        <div class="register-subtitle">
+            Create Your Account
+        </div>
+
+    </div>
+
+
+    <!-- Body -->
+
+    <div class="register-body">
+
+        <!-- General Error -->
+
+        <div th:if="${error}"
+             class="alert alert-danger">
+
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+            <span th:text="${error}">
+                Unable to complete registration.
+            </span>
+
+        </div>
+
+
+        <!-- Registration Form -->
+
+        <form th:action="@{/user/register}"
+              th:object="${userRegister}"
+              method="post"
+              enctype="multipart/form-data">
+
+
+            <!-- Full Name -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Full Name
+                </label>
+
+                <div class="input-group">
+
+                    <span class="input-group-text">
+                        <i class="bi bi-person"></i>
+                    </span>
+
+                    <input type="text"
+                           th:field="*{fullName}"
+                           class="form-control"
+                           placeholder="Enter your full name"
+                           autocomplete="name"
+                           required>
+
+                </div>
+
+                <div class="text-danger small mt-1"
+                     th:if="${#fields.hasErrors('fullName')}"
+                     th:errors="*{fullName}">
+                </div>
+
+            </div>
+
+
+            <!-- Email -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Email Address
+                </label>
+
+                <div class="input-group">
+
+                    <span class="input-group-text">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+
+                    <input type="email"
+                           th:field="*{email}"
+                           class="form-control"
+                           placeholder="Enter your email"
+                           autocomplete="email"
+                           required>
+
+                </div>
+
+                <div class="text-danger small mt-1"
+                     th:if="${#fields.hasErrors('email')}"
+                     th:errors="*{email}">
+                </div>
+
+            </div>
+
+
+            <!-- Phone Number -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Phone Number
+                </label>
+
+                <div class="input-group">
+
+                    <span class="input-group-text">
+                        <i class="bi bi-phone"></i>
+                    </span>
+
+                    <input type="text"
+                           th:field="*{phoneNumber}"
+                           class="form-control"
+                           placeholder="Enter 10-digit phone number"
+                           maxlength="10"
+                           minlength="10"
+                           inputmode="numeric"
+                           autocomplete="tel"
+                           required>
+
+                </div>
+
+                <div class="text-danger small mt-1"
+                     th:if="${#fields.hasErrors('phoneNumber')}"
+                     th:errors="*{phoneNumber}">
+                </div>
+
+            </div>
+
+
+            <!-- Profile Image -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Profile Image
+                </label>
+
+                <div class="profile-upload">
+
+                    <input type="file"
+                           th:field="*{profileImage}"
+                           id="profileImage"
+                           class="form-control"
+                           accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+
+                    <div class="form-text mt-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        JPG, JPEG or PNG only. Maximum size: 5 MB.
+                    </div>
+
+                    <img id="profilePreview"
+                         class="profile-preview"
+                         alt="Profile Preview">
+
+                </div>
+
+                <div class="text-danger small mt-1"
+                     th:if="${#fields.hasErrors('profileImage')}"
+                     th:errors="*{profileImage}">
+                </div>
+
+            </div>
+
+
+            <!-- Password -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Password
+                </label>
+
+                <div class="input-group">
+
+                    <span class="input-group-text">
+                        <i class="bi bi-lock"></i>
+                    </span>
+
+                    <input type="password"
+                           th:field="*{password}"
+                           id="password"
+                           class="form-control"
+                           placeholder="Enter password"
+                           autocomplete="new-password"
+                           required>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            onclick="togglePassword('password', 'passwordIcon')">
+
+                        <i class="bi bi-eye"
+                           id="passwordIcon"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="text-danger small mt-1"
+                     th:if="${#fields.hasErrors('password')}"
+                     th:errors="*{password}">
+                </div>
+
+            </div>
+
+
+            <!-- Confirm Password -->
+
+            <div class="mb-4">
+
+                <label class="form-label">
+                    Confirm Password
+                </label>
+
+                <div class="input-group">
+
+                    <span class="input-group-text">
+                        <i class="bi bi-lock-fill"></i>
+                    </span>
+
+                    <input type="password"
+                           th:field="*{confirmPassword}"
+                           id="confirmPassword"
+                           class="form-control"
+                           placeholder="Confirm your password"
+                           autocomplete="new-password"
+                           required>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')">
+
+                        <i class="bi bi-eye"
+                           id="confirmPasswordIcon"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="text-danger small mt-1"
+                     th:if="${#fields.hasErrors('confirmPassword')}"
+                     th:errors="*{confirmPassword}">
+                </div>
+
+            </div>
+
+
+            <!-- Register Button -->
+
+            <button type="submit"
+                    class="btn btn-primary register-button w-100">
+
+                <i class="bi bi-person-plus-fill me-2"></i>
+
+                Create Account
+
+            </button>
+
+        </form>
+
+
+        <!-- Divider -->
+
+        <div class="text-center my-4">
+
+            <span class="text-muted">
+                Already have an account?
+            </span>
+
+            <a th:href="@{/user/login}"
+               class="login-link ms-1">
+
+                Login
+
+            </a>
+
+        </div>
+
+
+        <!-- Home -->
+
+        <div class="text-center">
+
+            <a th:href="@{/}"
+               class="text-muted home-link">
+
+                <i class="bi bi-arrow-left me-1"></i>
+
+                Back to Home
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Bootstrap JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<script>
+
+    /*
+     * Password show/hide
+     */
+
+    function togglePassword(inputId, iconId) {
+
+        const password =
+            document.getElementById(inputId);
+
+        const icon =
+            document.getElementById(iconId);
+
+        if (password.type === "password") {
+
+            password.type = "text";
+
+            icon.classList.remove("bi-eye");
+
+            icon.classList.add("bi-eye-slash");
+
+        } else {
+
+            password.type = "password";
+
+            icon.classList.remove("bi-eye-slash");
+
+            icon.classList.add("bi-eye");
+
+        }
+    }
+
+
+    /*
+     * Profile image preview
+     */
+
+    document
+        .getElementById("profileImage")
+        .addEventListener("change", function (event) {
+
+            const file =
+                event.target.files[0];
+
+            const preview =
+                document.getElementById("profilePreview");
+
+            if (!file) {
+
+                preview.style.display = "none";
+
+                preview.removeAttribute("src");
+
+                return;
+            }
+
+            /*
+             * Validate file type
+             */
+
+            const allowedTypes = [
+                "image/jpeg",
+                "image/png"
+            ];
+
+            if (!allowedTypes.includes(file.type)) {
+
+                alert(
+                    "Only JPG, JPEG and PNG images are allowed."
+                );
+
+                event.target.value = "";
+
+                preview.style.display = "none";
+
+                return;
+            }
+
+
+            /*
+             * Validate file size
+             */
+
+            const maxSize =
+                5 * 1024 * 1024;
+
+            if (file.size > maxSize) {
+
+                alert(
+                    "Profile image size must not exceed 5 MB."
+                );
+
+                event.target.value = "";
+
+                preview.style.display = "none";
+
+                return;
+            }
+
+
+            /*
+             * Show preview
+             */
+
+            const reader =
+                new FileReader();
+
+            reader.onload = function (e) {
+
+                preview.src =
+                    e.target.result;
+
+                preview.style.display =
+                    "block";
+            };
+
+            reader.readAsDataURL(file);
+
+        });
+
+</script>
+
+</body>
+
+</html>
