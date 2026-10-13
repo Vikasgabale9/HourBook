@@ -22,6 +22,9 @@ public class PaymentServiceImpl
     @Value("${razorpay.key.secret}")
     private String razorpayKeySecret;
 
+    @Value("${razorpay.webhook.secret:}")
+    private String razorpayWebhookSecret;
+
 
     // =========================================
     // Create Razorpay Order
@@ -324,6 +327,41 @@ public class PaymentServiceImpl
                     "Failed to verify Razorpay payment",
                     e
             );
+        }
+    }
+
+
+    // =========================================
+    // Verify Razorpay Webhook Signature
+    // =========================================
+
+    @Override
+    public boolean verifyWebhookSignature(String rawBody, String signature) {
+        try {
+            if (rawBody == null || signature == null || signature.isBlank()
+                    || razorpayWebhookSecret == null || razorpayWebhookSecret.isBlank()) {
+                return false;
+            }
+
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec key = new SecretKeySpec(
+                    razorpayWebhookSecret.getBytes(StandardCharsets.UTF_8),
+                    "HmacSHA256"
+            );
+            mac.init(key);
+            byte[] digest = mac.doFinal(rawBody.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte value : digest) {
+                hex.append(String.format("%02x", value));
+            }
+
+            return java.security.MessageDigest.isEqual(
+                    hex.toString().getBytes(StandardCharsets.UTF_8),
+                    signature.getBytes(StandardCharsets.UTF_8)
+            );
+        } catch (Exception ex) {
+            return false;
         }
     }
 }

@@ -7,16 +7,26 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.app.hourbook.enums.GroundStatus;
 import com.app.hourbook.model.Ground;
+
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface GroundRepository
         extends JpaRepository<Ground, Integer>,
         JpaSpecificationExecutor<Ground> {
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT g FROM Ground g WHERE g.id = :groundId")
+	Optional<Ground> findByIdForUpdate(
+	        @Param("groundId") Integer groundId
+	);
     // =========================
     // Admin Ground Queries
     // =========================

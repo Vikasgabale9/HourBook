@@ -14,7 +14,7 @@ import com.app.hourbook.exception.AdminNotFoundException;
 import com.app.hourbook.model.AppAdmin;
 import com.app.hourbook.repository.AdminRepository;
 import com.app.hourbook.security.JwtService;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.NoArgsConstructor;
 
 @Service
@@ -23,6 +23,9 @@ public class AdminService {
 
 	@Autowired
 	private AdminRepository adminRepository;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 	
 	@Autowired
 	private JwtService jwtService;
@@ -61,7 +64,9 @@ public class AdminService {
 		emailService.sendOtpEmail(request.getEmail(), otp);
 		AppAdmin admin = new AppAdmin();
 		admin.setUsername(request.getUsername());
-		admin.setPassword(request.getPassword()); // Encrypt in production
+		admin.setPassword(
+			    passwordEncoder.encode(request.getPassword())
+			);
 		admin.setEmail(request.getEmail());
         admin.setOtp(otp);
         admin.setRole(Role.ROLE_ADMIN);

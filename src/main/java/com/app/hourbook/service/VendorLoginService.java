@@ -7,12 +7,16 @@ import com.app.hourbook.dto.VendorDashLoginReq;
 import com.app.hourbook.exception.InvalidCredentialsException;
 import com.app.hourbook.model.VendorDetails;
 import com.app.hourbook.repository.VendorDetailsRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class VendorLoginService {
 
     @Autowired
     private VendorDetailsRepository vendorDetailsRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public VendorDetails login(VendorDashLoginReq req) {
 
@@ -24,9 +28,13 @@ public class VendorLoginService {
                         new InvalidCredentialsException(
                                 "Invalid login credentials"));
 
-        if (!vendor.getPassword().equals(req.getPassword())) {
+        if (!passwordEncoder.matches(
+                req.getPassword(),
+                vendor.getPassword())) {
+
             throw new InvalidCredentialsException(
-                    "Invalid password");
+                "Invalid login credentials"
+            );
         }
 
         if (!vendor.getVendorAuth().isVerified()) {

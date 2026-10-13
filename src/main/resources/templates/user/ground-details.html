@@ -34,6 +34,22 @@
 
     <div class="container-fluid p-4">
 
+		<!-- Booking/ground configuration errors -->
+		<div class="alert alert-danger alert-dismissible fade show"
+		     th:if="${error}"
+		     role="alert">
+
+		    <i class="bi bi-exclamation-triangle-fill"></i>
+
+		    <span th:text="${error}"></span>
+
+		    <button type="button"
+		            class="btn-close"
+		            data-bs-dismiss="alert"
+		            aria-label="Close">
+		    </button>
+		</div>
+		
         <!-- Back Button -->
         <a th:href="@{/user/grounds}"
            class="btn btn-secondary mb-4">

@@ -1,3 +1,4 @@
+
 package com.app.hourbook.service;
 
 import org.springframework.data.domain.Page;
@@ -6,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.app.hourbook.enums.GroundStatus;
 import com.app.hourbook.enums.KycStatus;
@@ -19,75 +21,129 @@ import com.app.hourbook.specification.GroundSpecification;
 import com.app.hourbook.specification.UserSpecification;
 import com.app.hourbook.specification.VendorSpecification;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AdminMvcService {
 
-	private final AppUserDetailsRepository userRepository;
-	private final GroundRepository groundRepository;
-	private final VendorDetailsRepository vendorDetailsRepository;
+    private final AppUserDetailsRepository userRepository;
+    private final GroundRepository groundRepository;
+    private final VendorDetailsRepository vendorDetailsRepository;
 
-	
-	public AdminMvcService(AppUserDetailsRepository userRepository, GroundRepository groundRepository,
-			VendorDetailsRepository vendorDetailsRepository) {
-		super();
-		this.userRepository = userRepository;
-		this.groundRepository = groundRepository;
-		this.vendorDetailsRepository = vendorDetailsRepository;
-	}
+    /**
+     * Returns a paginated list of users with optional search filtering.
+     */
+    public Page<AppUserDetails> getUsers(int page, int size, String search) {
+        Pageable pageable = createPageable(page, size);
 
-	public Page<AppUserDetails> getUsers(int page, int size, String search) {
+        Specification<AppUserDetails> specification =
+                UserSpecification.search(search);
 
-		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-		Specification<AppUserDetails> specification = UserSpecification.search(search);
+        return userRepository.findAll(specification, pageable);
+    }
 
-		return userRepository.findAll(specification, pageable);
-	}
+    /**
+     * Returns a paginated list of vendors with optional search filtering.
+     */
+    public Page<VendorDetails> getVendors(int page, int size, String search) {
+        Pageable pageable = createPageable(page, size);
 
-	public Page<VendorDetails> getVendors(int page, int size, String search) {
+        Specification<VendorDetails> specification =
+                VendorSpecification.search(search);
 
-		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-		Specification<VendorDetails> specification = VendorSpecification.search(search);
+        return vendorDetailsRepository.findAll(specification, pageable);
+    }
 
-		return vendorDetailsRepository.findAll(specification, pageable);
-	}
+    /**
+     * Approves a vendor's KYC.
+     */
+    @Transactional
+    public void approveVendorKyc(Integer vendorId) {
+        VendorDetails vendor = findVendorById(vendorId);
+        vendor.setKycStatus(KycStatus.VERIFIED);
+        vendorDetailsRepository.save(vendor);
+    }
 
-	public void approveVendorKyc(Integer vendorId){
+    /**
+     * Rejects a vendor's KYC.
+     */
+    @Transactional
+    public void rejectVendorKyc(Integer vendorId) {
+        VendorDetails vendor = findVendorById(vendorId);
+        vendor.setKycStatus(KycStatus.REJECTED);
+        vendorDetailsRepository.save(vendor);
+    }
 
-	    VendorDetails vendor =
-	            vendorDetailsRepository.findById(vendorId)
-	            .orElseThrow(() -> new RuntimeException("Vendor not found"));
+    /**
+     * Returns a paginated list of grounds with optional status and search filters.
+     */
+    public Page<Ground> getGrounds(
+            int page,
+            int size,
+            String status,
+            String search) {
 
-	    vendor.setKycStatus(KycStatus.VERIFIED);
+        Pageable pageable = createPageable(page, size);
+        GroundStatus groundStatus = parseGroundStatus(status);
 
-	    vendorDetailsRepository.save(vendor);
+        return groundRepository.findAll(
+                GroundSpecification.filter(search, groundStatus),
+                pageable
+        );
+    }
 
-	}
-	public void rejectVendorKyc(Integer vendorId){
+    /**
+     * Creates a pageable request with consistent sorting.
+     */
+    private Pageable createPageable(int page, int size) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
 
-	    VendorDetails vendor =
-	            vendorDetailsRepository.findById(vendorId)
-	            .orElseThrow(() -> new RuntimeException("Vendor not found"));
+        if (size <= 0) {
+            throw new IllegalArgumentException("Page size must be greater than zero");
+        }
 
-	    vendor.setKycStatus(KycStatus.REJECTED);
+        return PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "id")
+        );
+    }
 
-	    vendorDetailsRepository.save(vendor);
+    /**
+     * Finds a vendor or throws an exception when the vendor does not exist.
+     */
+    private VendorDetails findVendorById(Integer vendorId) {
+        if (vendorId == null) {
+            throw new IllegalArgumentException("Vendor ID cannot be null");
+        }
 
-	}
-	
-	public Page<Ground> getGrounds(int page, int size, String status, String search) {
+        return vendorDetailsRepository.findById(vendorId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Vendor not found with ID: " + vendorId
+                        )
+                );
+    }
 
-		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+    /**
+     * Converts the supplied status into a GroundStatus enum.
+     * A blank or missing status means no status filter.
+     */
+    private GroundStatus parseGroundStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
 
-		GroundStatus groundStatus = null;
-
-		if (status != null && !status.isBlank()) {
-			try {
-				groundStatus = GroundStatus.valueOf(status.toUpperCase());
-			} catch (IllegalArgumentException e) {
-				groundStatus = null;
-			}
-		}
-
-		return groundRepository.findAll(GroundSpecification.filter(search, groundStatus), pageable);
-	}
+        try {
+            return GroundStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(
+                    "Invalid ground status: " + status
+            );
+        }
+    }
 }

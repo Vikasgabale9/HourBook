@@ -6,6 +6,7 @@ import com.app.hourbook.dto.user.UserLoginRequestDto;
 import com.app.hourbook.exception.InvalidCredentialsException;
 import com.app.hourbook.model.AppUserDetails;
 import com.app.hourbook.repository.AppUserDetailsRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 public class UserLoginService {
 
     private final AppUserDetailsRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AppUserDetails login(UserLoginRequestDto request) {
 
@@ -102,11 +104,12 @@ public class UserLoginService {
          * Password is compared with the password
          * stored in AppUserDetails.
          */
-        if (!request.getPassword()
-                .equals(user.getPassword())) {
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword())) {
 
             throw new InvalidCredentialsException(
-                    "Invalid email/phone number or password"
+                "Invalid email/phone number or password"
             );
         }
 

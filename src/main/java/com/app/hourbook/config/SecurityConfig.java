@@ -34,7 +34,8 @@ public class SecurityConfig {
 								"/js/**",
 								"/images/**",
 								"/uploads/**",
-								"/favicon.ico"
+								"/favicon.ico",
+								"/webhooks/razorpay"
 								)
 						.permitAll()
 

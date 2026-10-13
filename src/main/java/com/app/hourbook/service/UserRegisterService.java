@@ -20,6 +20,7 @@ import com.app.hourbook.repository.AppUserDetailsRepository;
 import com.app.hourbook.repository.AppUserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class UserRegisterService {
     private final AppUserRepository appUserRepository;
     private final AppUserDetailsRepository appUserDetailsRepository;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     private static final long MAX_PROFILE_IMAGE_SIZE =
             5 * 1024 * 1024;
@@ -130,9 +132,8 @@ public class UserRegisterService {
         );
 
         details.setPassword(
-                request.getPassword()
-        );
-
+        	    passwordEncoder.encode(request.getPassword())
+        	);
         details.setOtp(otp);
 
         details.setEmailVerified(false);

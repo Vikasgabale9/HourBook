@@ -1,5 +1,7 @@
 package com.app.hourbook.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.app.hourbook.dto.VendorDashLoginReq;
@@ -14,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 public class VendorMvcLoginService {
 
     private final VendorDetailsRepository vendorDetailsRepository;
+    
+    private final PasswordEncoder passwordEncoder;	
 
     public VendorDetails login(
             VendorDashLoginReq request) {
@@ -34,11 +38,12 @@ public class VendorMvcLoginService {
         // ONLY PASSWORD CHECK
         // =====================================================
 
-        if (!vendor.getPassword()
-                .equals(request.getPassword())) {
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                vendor.getPassword())) {
 
             throw new InvalidCredentialsException(
-                    "Invalid password"
+                "Invalid login credentials"
             );
         }
 

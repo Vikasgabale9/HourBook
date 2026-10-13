@@ -1,5 +1,7 @@
+
 package com.app.hourbook.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,161 +23,96 @@ public class VendorRegisterMvcService {
     private final VendorRepository vendorRepository;
     private final VendorDetailsRepository vendorDetailsRepository;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     // =========================================================
     // REGISTER VENDOR
     // =========================================================
 
     @Transactional
-    public Integer register(
-            VendorRegisterRequestDto request) throws Exception {
+    public Integer register(VendorRegisterRequestDto request)
+            throws Exception {
 
-        // -----------------------------------------------------
-        // Password confirmation
-        // -----------------------------------------------------
+        // Validate password confirmation
+        if (request.getPassword() == null
+                || request.getConfirmPassword() == null
+                || !request.getPassword()
+                        .equals(request.getConfirmPassword())) {
 
-        if (!request.getPassword()
-                .equals(request.getConfirmPassword())) {
-
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "Password and confirm password do not match"
             );
         }
 
-        // -----------------------------------------------------
-        // Email already exists
-        // -----------------------------------------------------
-
-        if (vendorDetailsRepository
-                .existsByEmail(request.getEmail())) {
-
-            throw new RuntimeException(
+        // Check whether email is already registered
+        if (vendorDetailsRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException(
                     "Email is already registered"
             );
         }
 
-        // -----------------------------------------------------
-        // Check existing Vendor auth record
-        // -----------------------------------------------------
+        // Find existing vendor authentication record
+        Vendor vendor = vendorRepository
+                .findByPhoneNumber(request.getPhoneNumber())
+                .orElse(null);
 
-        Vendor vendor =
-                vendorRepository
-                        .findByPhoneNumber(
-                                request.getPhoneNumber()
-                        )
-                        .orElse(null);
-
-        // -----------------------------------------------------
-        // Already verified vendor
-        // -----------------------------------------------------
-
+        // Reject an already verified vendor
         if (vendor != null && vendor.isVerified()) {
-
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "Phone number is already registered"
             );
         }
 
-        // -----------------------------------------------------
-        // Existing unverified Vendor
-        // OR create new Vendor
-        // -----------------------------------------------------
-
+        // Create a new vendor if no record exists
         if (vendor == null) {
-
             vendor = new Vendor();
-
-            vendor.setPhoneNumber(
-                    request.getPhoneNumber()
-            );
-
-            vendor.setRole(
-                    Role.ROLE_VENDOR
-            );
+            vendor.setPhoneNumber(request.getPhoneNumber());
         }
 
-        vendor.setPhoneNumber(
-                request.getPhoneNumber()
-        );
-
-        vendor.setRole(
-                Role.ROLE_VENDOR
-        );
-
+        vendor.setPhoneNumber(request.getPhoneNumber());
+        vendor.setRole(Role.ROLE_VENDOR);
         vendor.setVerified(false);
 
-        // REST token is NOT generated here.
+        // Do not generate a REST token during MVC registration
         vendor.setToken(null);
 
-        // -----------------------------------------------------
-        // Generate EMAIL OTP
-        // -----------------------------------------------------
-
-        String otp =
-                emailService.genrateOtp();
-
+        // Generate email OTP
+        String otp = emailService.genrateOtp();
         vendor.setOtp(otp);
 
-        vendor =
-                vendorRepository.save(vendor);
+        vendor = vendorRepository.save(vendor);
 
-        // -----------------------------------------------------
-        // Existing profile
-        // -----------------------------------------------------
-
-        VendorDetails details =
-                vendorDetailsRepository
-                        .findByVendorAuthId(
-                                vendor.getId()
-                        )
-                        .orElse(null);
+        // Find an existing profile or create one
+        VendorDetails details = vendorDetailsRepository
+                .findByVendorAuthId(vendor.getId())
+                .orElse(null);
 
         if (details == null) {
-
             details = new VendorDetails();
-
             details.setVendorAuth(vendor);
         }
 
-        details.setFullName(
-                request.getFullName()
-        );
+        details.setFullName(request.getFullName());
+        details.setPhoneNumber(request.getPhoneNumber());
+        details.setEmail(request.getEmail());
 
-        details.setPhoneNumber(
-                request.getPhoneNumber()
-        );
-
-        details.setEmail(
-                request.getEmail()
-        );
-
+        // Hash the password before storing it
         details.setPassword(
-                request.getPassword()
+                passwordEncoder.encode(request.getPassword())
         );
 
         details.setOtp(otp);
-
         details.setEmailVerified(false);
-
         details.setActive(true);
 
         if (details.getKycStatus() == null) {
-
-            details.setKycStatus(
-                    KycStatus.NOT_SUBMITTED
-            );
+            details.setKycStatus(KycStatus.NOT_SUBMITTED);
         }
 
         vendorDetailsRepository.save(details);
 
-        // -----------------------------------------------------
-        // Send OTP
-        // -----------------------------------------------------
-
-        emailService.sendOtpEmail(
-                request.getEmail(),
-                otp
-        );
+        // Send OTP to the registered email
+        emailService.sendOtpEmail(request.getEmail(), otp);
 
         return vendor.getId();
     }
@@ -185,60 +122,40 @@ public class VendorRegisterMvcService {
     // =========================================================
 
     @Transactional
-    public VendorDetails verifyOtp(
-            Integer vendorId,
-            String otp) {
+    public VendorDetails verifyOtp(Integer vendorId, String otp) {
 
-        Vendor vendor =
-                vendorRepository
-                        .findById(vendorId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Vendor not found"
-                                )
-                        );
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Vendor not found")
+                );
 
-        VendorDetails details =
-                vendorDetailsRepository
-                        .findByVendorAuthId(vendorId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Vendor profile not found"
-                                )
-                        );
+        VendorDetails details = vendorDetailsRepository
+                .findByVendorAuthId(vendorId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Vendor profile not found"
+                        )
+                );
 
-        // -----------------------------------------------------
-        // OTP check
-        // -----------------------------------------------------
-
+        // Validate OTP
         if (vendor.getOtp() == null) {
-
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "OTP expired or already used"
             );
         }
 
-        if (!vendor.getOtp().equals(otp)) {
-
-            throw new RuntimeException(
-                    "Invalid OTP"
-            );
+        if (otp == null || !vendor.getOtp().equals(otp)) {
+            throw new IllegalArgumentException("Invalid OTP");
         }
 
-        // -----------------------------------------------------
-        // Mark verified
-        // -----------------------------------------------------
-
+        // Mark vendor authentication as verified
         vendor.setOtp(null);
-
         vendor.setVerified(true);
-
         vendorRepository.save(vendor);
 
+        // Mark vendor email as verified
         details.setOtp(null);
-
         details.setEmailVerified(true);
-
         vendorDetailsRepository.save(details);
 
         return details;
