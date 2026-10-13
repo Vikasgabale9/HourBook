@@ -20,9 +20,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
-
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -47,20 +46,12 @@ public class Ground {
     @Column(nullable = false)
     private Double pricePerHour;
 
-    /*
-     * Ground operating hours
-     */
-   // @Column(nullable = false)
+    // Ground operating hours
     private LocalTime openingTime;
 
-  //  @Column(nullable = false)
     private LocalTime closingTime;
 
-    /*
-     * Version 1:
-     * Fixed 60-minute booking slots
-     */
-  //  @Column(nullable = false)
+    // Fixed booking slot duration
     private Integer slotDurationMinutes = 60;
 
     @Column(nullable = false)
@@ -75,11 +66,11 @@ public class Ground {
 
     @ElementCollection(targetClass = Amenities.class)
     @CollectionTable(
-            name = "ground_amenities",
-            joinColumns = @JoinColumn(name = "ground_id")
+        name = "ground_amenities",
+        joinColumns = @JoinColumn(name = "ground_id")
     )
     @Enumerated(EnumType.STRING)
-    @Column(name = "amenity")
+    @Column(name = "amenity", nullable = false)
     private List<Amenities> amenities = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
@@ -88,9 +79,10 @@ public class Ground {
 
     @ElementCollection
     @CollectionTable(
-            name = "ground_images",
-            joinColumns = @JoinColumn(name = "ground_id")
+        name = "ground_images",
+        joinColumns = @JoinColumn(name = "ground_id")
     )
+    @OrderColumn(name = "image_order")
     @Column(name = "image_url")
     private List<String> imageUrls = new ArrayList<>();
 
