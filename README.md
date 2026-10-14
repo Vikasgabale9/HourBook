@@ -1,862 +1,244 @@
-# HourBook – Sports Ground Booking Platform
+# HourBook — Sports Ground Booking Platform
 
-HourBook is a full-stack sports ground booking platform built with Java, Spring Boot, Spring Security, Thymeleaf, JPA/Hibernate, MySQL and Razorpay.
+**HourBook** is a Java/Spring Boot web application for discovering sports grounds and managing hourly reservations. It provides separate workflows for users, vendors, and administrators, with server-side booking validation, JWT-secured REST APIs, session-protected web dashboards, and Razorpay payment verification.
 
-The platform provides separate workflows for Users, Vendors and Admins. Users can discover sports grounds and book available time slots, vendors can manage their grounds and monitor bookings/revenue, and administrators can manage users, vendors, grounds and approvals.
+- **Live application:** https://hourbook.onrender.com/
+- **Repository:** https://github.com/Vikasgabale9/HourBook
+- **Developer:** [Vikas Gabale](https://github.com/Vikasgabale9)
 
----
+> This repository is a portfolio/demo project. Configure your own database and provider credentials before running it locally. Availability and payment behavior in the hosted demo may depend on the deployment and external services.
 
-## 🚀 Project Overview
+## Features
 
-HourBook solves the problem of manually managing sports-ground availability and bookings.
+### User
+- Register, log in, and verify accounts with OTP.
+- Browse and search sports grounds and view details, images, amenities, operating hours, and hourly prices.
+- Check available time slots and create bookings.
+- Pay through Razorpay and view booking history/status.
+- Manage profile details and cancel eligible bookings.
 
-The system provides:
+### Vendor
+- Register, log in, and manage a vendor profile.
+- Submit KYC information and documents and view KYC status.
+- Add, edit, activate/deactivate, and view grounds.
+- Configure sport, ground type, location, price, operating hours, slot duration, amenities, and images.
+- View bookings for vendor-owned grounds and view booking/revenue summaries.
 
-- Sports ground discovery and search
-- Ground details, images, amenities and operating hours
-- Hourly slot generation
-- Real-time-style slot availability based on existing bookings
-- User registration and OTP verification
-- Vendor registration and OTP verification
-- Vendor KYC management
-- Admin approval workflow
-- Ground approval/rejection
-- Secure booking workflow
-- Razorpay payment integration
-- Server-side payment signature verification
-- Booking history
-- Booking cancellation
-- Vendor booking management
-- Vendor revenue tracking
-- Role-based access control
+### Admin
+- Access the admin dashboard.
+- Manage users and vendors.
+- Review vendor KYC and approve/reject grounds.
+- View and manage grounds and bookings.
 
----
+## Booking and payment flow
 
-## ✨ Main Features
+1. The user selects a ground, date, and time slot.
+2. The server validates the ground's status, operating hours, requested date/time, slot duration, and existing bookings.
+3. A booking is created in a pending state and a Razorpay order is created.
+4. The client completes Razorpay Checkout.
+5. The server validates the returned order/payment details and verifies the Razorpay HMAC-SHA256 signature.
+6. The booking is confirmed only after successful server-side payment verification.
 
-### 👤 User
+The browser is not treated as the authority for payment success. Pending and confirmed bookings are considered when checking slot conflicts. The application also has configurable expiry settings for stale pending bookings.
 
-- User registration and login
-- Email/phone verification using OTP
-- User dashboard
-- Browse available sports grounds
-- Search grounds by name
-- View ground details
-- View ground images
-- View sports type and ground type
-- View amenities
-- View price per hour
-- View opening and closing time
-- Check available booking slots
-- Select booking date and time
-- Create a booking
-- Razorpay checkout
-- Server-side payment verification
-- View booking history
-- View booking status
-- Cancel bookings
-- User profile management
+## Authentication and security
 
-### 🏢 Vendor
+The application has both REST APIs and server-rendered Thymeleaf pages:
 
-- Vendor registration and login
-- OTP verification
-- Vendor profile
-- KYC submission
-- Aadhaar/PAN document upload
-- Profile image upload
-- KYC status
-- Add sports grounds
-- Edit grounds
-- Enable/disable grounds
-- View vendor grounds
-- Configure: Sport, Ground type, Location, Price per hour, Opening time, Closing time, Slot duration, Amenities, Ground images
-- View bookings for vendor-owned grounds
-- Filter bookings by status (confirmed / pending / cancelled)
-- Revenue dashboard
-- View paid/confirmed booking revenue
+- **REST APIs:** Spring Security, JWT authentication, and role-based authorization.
+- **Web dashboards:** session checks for user/vendor/admin pages; admin routes also use an interceptor.
+- **Payments:** server-side Razorpay signature verification.
+- **Secrets:** database passwords, JWT signing secret, payment credentials, and mail credentials should be supplied through environment variables, not committed to source control.
 
-### 🛡️ Admin
+Do not use real provider credentials in screenshots, issues, commits, or sample configuration files. If a credential was ever committed, rotate it; removing it from the latest commit alone does not invalidate it.
 
-- Admin login
-- Admin dashboard
-- View total users, vendors, grounds and bookings
-- Ground approval status dashboard
-- Manage users (activate/deactivate)
-- Manage vendors
-- Review vendor KYC and documents, approve/reject KYC
-- Manage grounds (approve/reject, enable/disable, view details, add ground)
-- Manage bookings
-- Admin session protection
+## Architecture
 
----
+HourBook uses a layered Spring Boot architecture:
 
-## 🏗️ Architecture
+```text
+Browser (HTML / CSS / JavaScript / Thymeleaf)
+                    |
+                    v
+          Web Controllers / REST APIs
+                    |
+                    v
+               Services
+          (business logic)
+                    |
+                    v
+       Spring Data JPA Repositories
+                    |
+                    v
+                  MySQL
 
-HourBook follows a layered Spring Boot architecture.
-
-```
-                    ┌───────────────────────┐
-                    │       Browser         │
-                    │  HTML / CSS / JS      │
-                    │     Thymeleaf         │
-                    └───────────┬───────────┘
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │      Controller       │
-                    │  Web + REST APIs      │
-                    └───────────┬───────────┘
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │       Service         │
-                    │ Business Logic        │
-                    └───────────┬───────────┘
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │      Repository       │
-                    │ Spring Data JPA       │
-                    └───────────┬───────────┘
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │        MySQL          │
-                    └───────────────────────┘
-
-                         Payment Flow
-                              │
-                              ▼
-                    ┌───────────────────────┐
-                    │       Razorpay        │
-                    │  Checkout + Orders    │
-                    └───────────────────────┘
+           Razorpay Checkout/API
+       (server-side order/signature checks)
 ```
 
----
+The codebase separates controllers, services, repositories, entities/models, DTOs, security components, configuration, and exception handling.
 
-## 🔐 Authentication & Security
+## Technology stack
 
-HourBook uses two authentication approaches because the application contains both REST APIs and server-rendered web pages.
-
-### REST API Authentication
-
-The `/api/**` endpoints use:
-
-- JWT
-- Spring Security
-- JWT authentication filter
-- Role-based authorization
-
-Typical roles:
-
-```
-ROLE_USER
-ROLE_VENDOR
-```
-
-### Web Application Authentication
-
-The Thymeleaf dashboards use HTTP session-based authentication.
-
-Examples:
-
-```
-/user/**
-/vendor/**
-/admin/**
-```
-
-Admin routes are additionally protected using an `AdminInterceptor`.
-
-JWT is not used for every page in the application. The project intentionally uses JWT for REST APIs and sessions for the server-rendered dashboards.
-
----
-
-## 💳 Razorpay Payment Flow
-
-HourBook integrates Razorpay for online booking payments.
-
-The payment workflow is:
-
-```
-User selects ground
-        ↓
-Select date and time slot
-        ↓
-Server validates slot
-        ↓
-Booking created as PENDING
-        ↓
-Razorpay Order created
-        ↓
-Razorpay Checkout opens
-        ↓
-User completes payment
-        ↓
-Razorpay returns:
-    - Order ID
-    - Payment ID
-    - Signature
-        ↓
-Server verifies HMAC-SHA256 signature
-        ↓
-Payment verified
-        ↓
-PaymentStatus = PAID
-        ↓
-BookingStatus = CONFIRMED
-```
-
-### Payment Security
-
-The server verifies the Razorpay signature using:
-
-```
-razorpayOrderId + "|" + razorpayPaymentId
-```
-
-The signature is verified using HMAC-SHA256 with the Razorpay secret.
-
-The booking is confirmed only after successful server-side verification.
-
-> **Note:** Existing bookings created before `PaymentStatus.PAID` was persisted may display a missing/unknown payment status. New successful payments persist both `PaymentStatus = PAID` and `BookingStatus = CONFIRMED`.
-
-### Payment Status
-
-```
-CREATED
-PENDING
-PAID
-FAILED
-REFUNDED
-```
-
-### Booking Status
-
-```
-PENDING
-CONFIRMED
-CANCELLED
-COMPLETED
-```
-
----
-
-## 📅 Booking & Slot Management
-
-The application generates hourly slots based on the ground's configuration.
-
-For example:
-
-```
-Opening Time : 06:00 AM
-Closing Time : 11:00 PM
-Slot Duration: 60 minutes
-```
-
-Generated slots include:
-
-```
-06:00 - 07:00
-07:00 - 08:00
-08:00 - 09:00
-...
-10:00 - 11:00
-```
-
-The server prevents already-booked slots from being booked again. Bookings with these statuses block the slot:
-
-```
-PENDING
-CONFIRMED
-```
-
-For the current date, past time slots are also disabled.
-
----
-
-## 🗄️ Database
-
-The application uses MySQL with Spring Data JPA / Hibernate.
-
-Main domain entities include:
-
-```
-AppUserDetails
-Vendor
-Ground
-Booking
-```
-
-The booking entity contains Razorpay payment information directly:
-
-```
-razorpayOrderId
-razorpayPaymentId
-razorpaySignature
-paymentStatus
-```
-
-There is no separate Payment entity in the current implementation.
-
----
-
-## 📦 Technology Stack
-
-| Technology | Purpose |
+| Area | Technologies |
 |---|---|
-| Java 17 | Programming language |
-| Spring Boot 3.5.15 | Backend framework |
-| Spring MVC | Web layer |
-| Spring Security | Authentication and authorization |
-| Spring Data JPA | Database access |
-| Hibernate | ORM |
-| MySQL | Database |
-| Thymeleaf | Server-side UI |
-| HTML5 | Frontend |
-| CSS3 | Styling |
-| JavaScript | Client-side functionality |
-| Bootstrap | UI components |
-| JWT / JJWT 0.12.6 | REST API authentication |
-| Razorpay Java SDK 1.4.10 | Online payments |
-| Spring Mail | Email/OTP |
-| Jakarta Validation | Request validation |
-| Lombok | Boilerplate reduction |
-| Maven | Build and dependency management |
-| Postman | API testing |
-| Git/GitHub | Version control |
-
----
-
-## 📁 Project Structure
-
-```
-HourBook/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/app/hourbook/
-│   │   │       ├── HourBookApplication.java
-│   │   │       ├── config/            # AdminInterceptor, FileUploadConfig, SecurityConfig, WebConfig
-│   │   │       ├── controller/
-│   │   │       │   ├── admin/         # AdminMvcController, AdminRegisterController
-│   │   │       │   ├── ground/        # GroundController (admin ground approval/CRUD)
-│   │   │       │   ├── user/          # UserBookingController, UserDashboardController, UserGroundController, UserLoginController, UserProfileController, AppUserController, AppUserDetailsController
-│   │   │       │   └── vendor/        # VendorController, VendorDashBoardController, VendorDetailsController, VendorKycMvcController, VendorLoginController, VendorPanelGroundController, VendorProfileController, VendorStaticController
-│   │   │       ├── dto/
-│   │   │       │   ├── admin/
-│   │   │       │   ├── booking/
-│   │   │       │   └── user/
-│   │   │       ├── email/             # EmailService (OTP / mail)
-│   │   │       ├── enums/             # Amenities, BookingStatus, GroundStatus, GroundType, KycStatus, PaymentStatus, Role
-│   │   │       ├── exception/         # GlobalExceptionHandler + custom exceptions
-│   │   │       ├── model/             # AppAdmin, AppUser, AppUserDetails, Booking, Ground, Vendor, VendorDetails
-│   │   │       ├── repository/        # Spring Data JPA repositories
-│   │   │       ├── security/          # JwtAuthenticationFilter, JwtService, AuthenticatedPrincipal
-│   │   │       ├── service/           # business logic + *ServiceImpl classes
-│   │   │       └── specification/     # GroundSpecification, UserSpecification, VendorSpecification
-│   │   │
-│   │   └── resources/
-│   │       ├── static/
-│   │       │   ├── css/admin.css
-│   │       │   └── favicon.ico
-│   │       ├── templates/
-│   │       │   ├── admin/             # dashboard, grounds, users, vendors, add/edit-ground, fragments/
-│   │       │   ├── user/              # dashboard, grounds, ground-details, book-slot, booking, payment, profile, fragments/
-│   │       │   └── vendor/            # dashboard, grounds, bookings, revenue, kyc, profile, fragments/
-│   │       ├── application.properties        # not committed (see .gitignore)
-│   │       └── application-example.properties # sample/template config
-│   │
-│   └── test/
-│       └── java/com/app/hourbook/HourBookApplicationTests.java
-│
-├── screenshots/
-├── uploads/            # runtime file storage (ground images, vendor KYC docs) — not part of source
-├── pom.xml
-├── .gitignore
-└── README.md
-```
-
-> Note: `AdminInterceptor` (route protection for `/admin/**`) lives under `config/`, and the JWT filter (`JwtAuthenticationFilter`) lives under `security/` — there are no separate top-level `filter/` or `interceptor/` packages in the actual codebase.
-
----
-
-## 🔌 Important Web Routes
-
-### User
-
-```
-GET  /user/dashboard
-GET  /user/grounds
-GET  /user/grounds/{groundId}
-GET  /user/bookings
-GET  /user/bookings/ground/{groundId}
-POST /user/bookings/create
-POST /user/bookings/verify-payment
-POST /user/bookings/cancel/{bookingId}
-```
-
-### Vendor
-
-```
-GET /vendor/dashboard
-GET /vendor/profile
-GET /vendor/grounds
-GET /vendor/bookings
-GET /vendor/revenue
-GET /vendor/kyc
-```
-
-Vendor booking filtering:
-
-```
-/vendor/bookings?status=CONFIRMED
-/vendor/bookings?status=PENDING
-/vendor/bookings?status=CANCELLED
-```
-
-### Admin
-
-```
-GET /admin/login
-GET /admin/dashboard
-GET /admin/users
-GET /admin/vendors
-GET /admin/grounds
-GET /admin/grounds/add
-GET /admin/bookings
-```
-
----
-
-## 💰 Vendor Revenue
-
-Vendor revenue is calculated from confirmed bookings.
-
-Current business rule:
-
-```
-Revenue = SUM(totalAmount)
-          for CONFIRMED bookings
-```
-
-Example:
-
-```
-Booking #1 → ₹1
-Booking #2 → ₹5,000
-Booking #3 → ₹1
-Total Revenue = ₹5,002
-```
-
-Only confirmed bookings are included in the vendor revenue calculation.
-
----
-
-## 🧑‍💼 Admin Ground Approval
-
-A vendor-created ground does not automatically become bookable.
-
-```
-Vendor creates ground
-        ↓
-Ground status = PENDING
-        ↓
-Admin reviews ground
-        ↓
-       ┌───────────────┐
-       │               │
-       ▼               ▼
-   APPROVED          REJECTED
-       │
-       ▼
-Ground can be
-made available
-for booking
-```
-
-A user can book only an approved and active ground.
-
----
-
-## 🪪 Vendor KYC
-
-Vendors can submit KYC information including:
-
-- Full name
-- Aadhaar number
-- PAN number
-- Date of birth
-- Profile image
-- Aadhaar document
-- PAN document
-
-Admin can review the submitted KYC documents and manage the KYC status.
-
-> For a production application, sensitive identity information should be masked, encrypted where appropriate, access-controlled and handled according to applicable privacy and data-protection requirements.
-
----
-
-## 🖼️ Application Screens
-
-The application contains separate interfaces for Admin, Vendor and User.
-
-### Admin
-
-**Admin Login**
-![Admin Login](screenshots/adminLogin.png)
-
-**Admin Dashboard**
-![Admin Dashboard](screenshots/adminDashboard.png)
-
-**User Management**
-![User Management](screenshots/adminUserManagement.png)
-
-**Vendor Management**
-![Vendor Management](screenshots/adminVendorManagement.png)
-
-**Ground Management**
-![Ground Management](screenshots/adminViewGrounds.png)
-
-**Add Ground – Form**
-![Admin Add Ground](screenshots/adminAddGround1.png)
-
-**Add Ground – Details**
-![Admin Add Ground Details](screenshots/adminAddGround2.png)
-
-**Ground Details**
-![Ground Details](screenshots/ground1.png)
-
-**KYC / Document Review**
-![Document Viewer](screenshots/documentViewer.png)
-
-### Vendor
-
-**Vendor Dashboard**
-![Vendor Dashboard](screenshots/VendorDashboard.png)
-
-**Vendor Grounds**
-![Vendor Grounds](screenshots/VendorGrounds.png)
-
-**Vendor Bookings**
-![Vendor Bookings](screenshots/VendorBookings.png)
-
-**Vendor Booking Details**
-![Vendor Booking Details](screenshots/vendorBookingDetails.png)
-
-**Vendor Booking Management**
-![Vendor Booking Dashboard](screenshots/VendorBookingDashboard.png)
-
-**Vendor Profile**
-![Vendor Profile](screenshots/vendorProfile.png)
-
-**Vendor Profile / Bookings**
-![Vendor Profile Bookings](screenshots/VendorProfileBookings.png)
-
-**Vendor KYC**
-![Vendor KYC](screenshots/VendorKYC.png)
-
-**Vendor Revenue**
-![Vendor Revenue](screenshots/vendorRevenue.png)
-
-### User
-
-**User Dashboard**
-![User Dashboard](screenshots/UserDashboard.png)
-
-**Browse Grounds**
-![User Browse Grounds](screenshots/userBrowseGrounds.png)
-
-**Ground Listing**
-![User View Grounds](screenshots/UserViewGrounds.png)
-
-**Ground Details**
-![User Ground Details](screenshots/ground1.png)
-
-**Book Ground**
-![User Book Ground](screenshots/userBookGround.png)
-
-**Select Booking Slot**
-![User Book Slot](screenshots/userBookSlot.png)
-
-**Booking Slot – Details**
-![User Book Slot Details](screenshots/userBookSlot2.png)
-
-**Booking Summary**
-![User Booking](screenshots/userBooking.png)
-
-**Razorpay Order Creation**
-![Razorpay Order Creation](screenshots/razorpayOrderCreation.png)
-
-**Payment Processing**
-![Payment Processing](screenshots/paymentProcessing.png)
-
-**Payment Successful**
-![Payment Successful](screenshots/paymentSuccessfull.png)
-
-**My Bookings**
-![User Bookings](screenshots/UserBookings.png)
-
-**User Profile**
-![User Profile](screenshots/userProfile.png)
-
----
-
-## ⚙️ Setup & Installation
-
-### 1. Clone the Repository
-
-```
+| Language | Java 17 |
+| Framework | Spring Boot 3.5.15, Spring MVC |
+| Persistence | Spring Data JPA, Hibernate, MySQL |
+| Web UI | Thymeleaf, HTML, CSS, JavaScript, Bootstrap |
+| Security | Spring Security, JWT/JJWT, role-based authorization |
+| Payments | Razorpay Java SDK |
+| Email | Spring Mail; Gmail SMTP configuration is provided in the sample properties |
+| Validation | Jakarta Bean Validation |
+| Build | Maven |
+| Developer tools | Git, Postman, Swagger/OpenAPI where configured, JUnit/Spring Boot Test |
+
+## Prerequisites
+
+- JDK 17
+- Maven (or use the Maven wrapper if one is present in your checkout)
+- MySQL
+- Razorpay test credentials for testing payment flows
+- An email account/app password if testing email/OTP flows
+
+## Run locally
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/Vikasgabale9/HourBook.git
 cd HourBook
 ```
 
-### 2. Requirements
+### 2. Create a MySQL database
 
-Install the following:
-
-- Java 17+
-- Maven 3.8+
-- MySQL 8+
-- Git
-- IDE such as IntelliJ IDEA / Eclipse / Spring Tool Suite
-- Postman (optional, for API testing)
-
-### 3. Create MySQL Database
+Create a database, for example:
 
 ```sql
 CREATE DATABASE hourbook;
 ```
 
-### 4. Configure Application Properties
+Use a dedicated local database user where possible instead of a production/admin account.
 
-Create/configure `src/main/resources/application.properties`:
+### 3. Configure application properties
+
+The project includes `src/main/resources/application-example.properties` as a starting point. Create your local `src/main/resources/application.properties` from that template, then set your own local values.
+
+At minimum, configure:
+
+- `spring.datasource.url`
+- `spring.datasource.username`
+- `spring.datasource.password`
+- `jwt.secret`
+- `razorpay.key.id`
+- `razorpay.key.secret`
+- `spring.mail.username`
+- `spring.mail.password`
+
+Example local values (replace every placeholder; these are not real credentials):
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/hourbook
-spring.datasource.username=YOUR_DB_USERNAME
-spring.datasource.password=YOUR_DB_PASSWORD
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=false
+spring.application.name=HourBook
 server.port=8989
 
-# Razorpay
-razorpay.key.id=YOUR_RAZORPAY_KEY_ID
-razorpay.key.secret=YOUR_RAZORPAY_KEY_SECRET
+spring.datasource.url=jdbc:mysql://localhost:3306/hourbook
+spring.datasource.username=YOUR_MYSQL_USERNAME
+spring.datasource.password=YOUR_MYSQL_PASSWORD
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-# Mail
-spring.mail.host=YOUR_SMTP_HOST
-spring.mail.port=YOUR_SMTP_PORT
-spring.mail.username=YOUR_EMAIL
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.open-in-view=false
+
+jwt.secret=REPLACE_WITH_A_LONG_RANDOM_SECRET
+jwt.expiration=86400000
+
+razorpay.key.id=YOUR_RAZORPAY_TEST_KEY_ID
+razorpay.key.secret=YOUR_RAZORPAY_TEST_KEY_SECRET
+
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=YOUR_EMAIL@gmail.com
 spring.mail.password=YOUR_EMAIL_APP_PASSWORD
-
-# JWT
-jwt.secret=YOUR_JWT_SECRET
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
 ```
 
-> Do not commit real passwords, API keys, SMTP passwords or JWT secrets to GitHub. The project's `.gitignore` should exclude `application.properties`. For production, use environment variables or a secure secret-management solution.
+Use Razorpay test-mode credentials for local testing. Never commit your populated `application.properties` file or any `.env` file.
 
-### ▶️ Run the Application
+### 4. Build and run
 
-Using Maven:
-
-```
-mvn clean install
+```bash
+mvn clean package
 mvn spring-boot:run
 ```
 
-Or run the main Spring Boot application class from your IDE.
+Or run `HourBookApplication` from your IDE.
 
-The application runs on: **http://localhost:8989**
+The default local port is **8989**, unless overridden by configuration. Open:
 
----
-
-## 🧪 Testing
-
-Postman can be used to test REST APIs. Test areas include:
-
-- Authentication
-- User APIs
-- Vendor APIs
-- Ground APIs
-- Booking APIs
-- Payment APIs
-
-For Razorpay testing, use Razorpay test credentials and test-mode payments.
-
----
-
-## 🔄 Complete User Booking Flow
-
-```
-1. User logs in
-        ↓
-2. User opens Browse Grounds
-        ↓
-3. User selects a ground
-        ↓
-4. User opens Ground Details
-        ↓
-5. User selects booking date
-        ↓
-6. Server generates available slots
-        ↓
-7. User selects a slot
-        ↓
-8. Server validates the ground
-        ↓
-9. Server validates date/time
-        ↓
-10. Server checks slot availability
-        ↓
-11. Booking created as PENDING
-        ↓
-12. Razorpay order created
-        ↓
-13. Razorpay Checkout opens
-        ↓
-14. User completes payment
-        ↓
-15. Razorpay returns payment details
-        ↓
-16. Server verifies signature
-        ↓
-17. PaymentStatus = PAID
-        ↓
-18. BookingStatus = CONFIRMED
-        ↓
-19. User sees booking in My Bookings
-        ↓
-20. Vendor sees booking in Vendor Bookings
-        ↓
-21. Confirmed amount contributes to revenue
+```text
+http://localhost:8989
 ```
 
----
+## Configuration reference
 
-## 🛡️ Important Booking Validations
+The deployed configuration uses environment variables for sensitive values. Configure the relevant variables in your hosting provider or local environment:
 
-The backend validates:
+| Variable / property | Purpose |
+|---|---|
+| `DB_PASSWORD` | Database password |
+| `RAZORPAY_KEY_ID` | Razorpay key ID |
+| `RAZORPAY_KEY_SECRET` | Razorpay API secret |
+| `RAZORPAY_WEBHOOK_SECRET` | Optional webhook secret if webhook handling is configured |
+| `MAIL_USERNAME` | Email account used to send mail |
+| `MAIL_PASSWORD` | Email app password/SMTP credential |
+| `JWT_SECRET` | Secret used to sign JWTs |
+| `PORT` | Hosting platform port override; defaults to 8989 |
+| `hourbook.booking.pending-timeout-minutes` | Pending-booking expiry timeout; default in application config is 15 minutes |
+| `hourbook.booking.expiry-check-ms` | Pending-booking expiry check interval; default in application config is 60000 ms |
 
-- User exists
-- Ground exists
-- Ground is approved
-- Ground is active
-- Booking date is valid
-- Booking time is within operating hours
-- Slot follows configured slot duration
-- Slot is not already booked
-- User owns the booking during payment verification
-- Razorpay order ID matches the stored order
-- Razorpay signature is valid
-- Cancelled/completed bookings cannot be incorrectly reused
+The names above reflect the current `application.properties` placeholders and configuration. If you change property names in code, update this table too.
 
-Business logic is handled on the server rather than trusting client-side values.
+## Main application areas
 
----
-
-## 🧩 Design Highlights
-
-### Layered Architecture
-
-```
-Controller
-    ↓
-Service
-    ↓
-Repository
-    ↓
-Database
-```
-
-This keeps request handling, business logic and persistence responsibilities separated.
-
-### DTO-Based API Design
-
-DTOs are used where appropriate to transfer data between API/UI layers without exposing unnecessary entity details.
-
-### JPA Specifications
-
-JPA Specifications are used for dynamic/filter-based database queries where applicable.
-
-### Role-Based Access
-
-Different application areas are separated according to:
-
-```
-USER
-VENDOR
-ADMIN
+```text
+src/main/java/com/app/hourbook/
+├── config/         # Security/web/file-upload configuration and admin interceptor
+├── controller/     # Admin, user, vendor, ground and booking controllers
+├── dto/            # Request/response data transfer objects
+├── email/          # Email/OTP functionality
+├── enums/          # Booking, payment, ground, KYC and role enums
+├── exception/      # Custom exceptions and global exception handling
+├── model/          # JPA entities/domain models
+├── repository/     # Spring Data repositories
+├── security/       # JWT filter and JWT service
+├── service/        # Business logic
+└── specification/  # Dynamic query specifications
 ```
 
-### Payment Verification
+Templates and static resources are under `src/main/resources/templates` and `src/main/resources/static`.
 
-Payment confirmation is performed on the server instead of trusting only the browser response.
+## Testing
 
----
+Run the automated test suite with:
 
-## 📊 Current Application Modules
-
-```
-                    HourBook
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-       User          Vendor          Admin
-        │              │              │
-        ▼              ▼              ▼
-   Browse Grounds   Manage Grounds  Manage Users
-   Book Slots       Manage KYC      Manage Vendors
-   Payments         Bookings        Approve Grounds
-   My Bookings      Revenue         Manage Bookings
-   Profile          Profile         Dashboard
+```bash
+mvn test
 ```
 
----
+The project includes Spring Boot test dependencies. For manual API checks, use Postman and test authentication, user/vendor/admin access, ground operations, booking validation, and payment verification. Use provider test credentials for payment tests.
 
-## 🔮 Future Enhancements
+## Important implementation notes
 
-Possible improvements for a production-ready version:
+- Booking availability must be validated on the server; hiding a slot in the UI alone is not sufficient.
+- Payment success should only be accepted after server-side signature verification.
+- A production deployment should additionally be reviewed for database migrations, concurrency/race-condition protection, rate limiting, monitoring, backup/recovery, and automated integration tests.
+- Uploaded KYC documents and ground images require secure storage and access controls. Do not commit runtime uploads or private documents to the repository.
 
-- Redis-based slot locking
-- Scheduled cleanup of abandoned PENDING bookings
-- Automatic refund workflow
-- Razorpay webhooks
-- Email booking confirmation
-- SMS notifications
-- Vendor earnings reports
-- Monthly revenue charts
-- Advanced ground search/filtering
-- Location/map integration
-- Reviews and ratings
-- Coupon/discount system
-- Admin analytics
-- Pagination for large booking datasets
-- Cloud storage such as AWS S3 for images/documents
-- Docker deployment
-- CI/CD pipeline
-- Automated unit and integration tests
-- Production monitoring and logging
+## Future improvements
 
----
+Potential areas for further development include automated integration tests, database migrations, stronger concurrency controls for simultaneous booking attempts, payment webhook reconciliation, cloud object storage for uploads, and CI/CD.
 
-## 🧑‍💻 Developer
+## License
 
-**Vikas Gabale**
-Java Backend / Spring Boot Developer
-
-**GitHub:**
-[https://github.com/Vikasgabale9](https://github.com/Vikasgabale9)
-
-**Project:**
-[HourBook – Sports Ground Booking Platform](https://github.com/Vikasgabale9/HourBook)
-
----
-
-## 📄 License
-
-This project is intended for learning, portfolio and demonstration purposes.
-
-Add an appropriate open-source license before distributing the project publicly if required.
+No explicit open-source license is specified here. Unless a license is added to the repository, do not assume that others have permission to redistribute or reuse the code.
