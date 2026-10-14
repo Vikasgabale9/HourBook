@@ -12,6 +12,8 @@ import com.app.hourbook.dto.user.UserRegisterOtpDto;
 import com.app.hourbook.dto.user.UserRegisterRequestDto;
 import com.app.hourbook.service.UserRegisterService;
 
+import lombok.extern.slf4j.Slf4j;
+
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequestMapping("/user")
 @RequiredArgsConstructor
+@Slf4j
 public class UserRegisterController {
 
     private final UserRegisterService userRegisterService;
@@ -78,6 +81,8 @@ public class UserRegisterController {
 
         } catch (RuntimeException ex) {
 
+            log.error("User registration failed: {}", ex.getMessage(), ex);
+
             model.addAttribute(
                     "error",
                     ex.getMessage()
@@ -86,6 +91,8 @@ public class UserRegisterController {
             return "user/register";
 
         } catch (Exception ex) {
+
+            log.error("Unexpected error during user registration", ex);
 
             model.addAttribute(
                     "error",

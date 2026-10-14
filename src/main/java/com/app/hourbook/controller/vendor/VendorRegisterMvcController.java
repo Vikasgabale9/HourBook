@@ -16,6 +16,9 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Controller
 @RequestMapping("/vendor")
 @RequiredArgsConstructor
@@ -89,6 +92,8 @@ public class VendorRegisterMvcController {
 
         } catch (RuntimeException ex) {
 
+            log.error("Vendor registration failed: {}", ex.getMessage(), ex);
+
             model.addAttribute(
                     "error",
                     ex.getMessage()
@@ -97,6 +102,8 @@ public class VendorRegisterMvcController {
             return "vendor/register";
 
         } catch (Exception ex) {
+
+            log.error("Unexpected error during vendor registration", ex);
 
             model.addAttribute(
                     "error",
