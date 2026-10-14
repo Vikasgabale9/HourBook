@@ -20,7 +20,7 @@ import com.app.hourbook.repository.AppUserDetailsRepository;
 import com.app.hourbook.repository.BookingRepository;
 import com.app.hourbook.repository.GroundRepository;
 import com.razorpay.Order;
-
+import org.hibernate.Hibernate;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -475,15 +475,23 @@ public class UserBookingServiceImpl implements UserBookingService {
     // Get User Bookings
     // =========================================
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<Booking> getUserBookings(Integer userId) {
+ // =========================================
+ // Get User Bookings
+ // =========================================
 
-        return bookingRepository
-                .findByUser_IdOrderByBookingDateDescStartTimeDesc(
-                        userId
-                );
-    }
+ @Override
+ @Transactional(readOnly = true)
+ public List<Booking> getUserBookings(Integer userId) {
+
+     List<Booking> bookings = bookingRepository
+             .findByUser_IdOrderByBookingDateDescStartTimeDesc(userId);
+
+     bookings.forEach(booking -> {
+         Hibernate.initialize(booking.getGround());
+     });
+
+     return bookings;
+ }
 
     // =========================================
     // Cancel Booking

@@ -1,3 +1,4 @@
+
 package com.app.hourbook.service;
 
 import java.io.IOException;
@@ -27,241 +28,293 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GroundServiceImpl implements GroundService {
 
-	private final GroundRepository groundRepository;
+    private final GroundRepository groundRepository;
+    private final VendorRepository vendorRepository;
 
-	private final VendorRepository vendorRepository;
+    // ==================== CREATE GROUND ====================
 
-	@Override
-	public GroundResponseDto createGround(GroundRequestDto dto, MultipartFile[] images) throws IOException {
+    @Override
+    public GroundResponseDto createGround(
+            GroundRequestDto dto,
+            MultipartFile[] images) throws IOException {
 
-		
-		Ground ground = new Ground();
+        Ground ground = new Ground();
 
-		ground.setName(dto.getName());
-		ground.setLocation(dto.getLocation());
-		ground.setPricePerHour(dto.getPricePerHour());
-		ground.setSports(dto.getSports());
-		ground.setType(dto.getType());
-		ground.setAmenities(dto.getAmenities());
+        ground.setName(dto.getName());
+        ground.setLocation(dto.getLocation());
+        ground.setPricePerHour(dto.getPricePerHour());
+        ground.setSports(dto.getSports());
+        ground.setType(dto.getType());
+        ground.setAmenities(dto.getAmenities());
 
-		ground.setOpeningTime(dto.getOpeningTime());
-		ground.setClosingTime(dto.getClosingTime());
-		ground.setSlotDurationMinutes(
-				dto.getSlotDurationMinutes() != null
-						? dto.getSlotDurationMinutes()
-						: 60);
+        ground.setOpeningTime(dto.getOpeningTime());
+        ground.setClosingTime(dto.getClosingTime());
 
-		ground.setIsActive(true);
-		ground.setStatus(GroundStatus.PENDING);
+        ground.setSlotDurationMinutes(
+                dto.getSlotDurationMinutes() != null
+                        ? dto.getSlotDurationMinutes()
+                        : 60);
 
-		// Vendor Mapping
-		Vendor vendor = vendorRepository.findById(dto.getVendorId())
-				.orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+        ground.setIsActive(true);
+        ground.setStatus(GroundStatus.PENDING);
 
-		ground.setVendor(vendor);
+        Vendor vendor = vendorRepository.findById(dto.getVendorId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vendor not found"));
 
-		// Image Upload
-		List<String> imageUrls = new ArrayList<>();
+        ground.setVendor(vendor);
+        ground.setImageUrls(saveImages(images));
 
-		if (images != null) {
+        Ground savedGround = groundRepository.save(ground);
 
-			for (MultipartFile image : images) {
+        return mapToResponse(savedGround);
+    }
 
-				if (!image.isEmpty()) {
+    // ==================== VIEW GROUND ====================
 
-					String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+    @Override
+    public GroundResponseDto getGroundById(Integer groundId) {
 
-					Path uploadPath = Paths.get("uploads");
+        // Fetch ground and amenities together to avoid lazy-loading errors.
+        Ground ground = groundRepository.findWithAmenitiesById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-					if (!Files.exists(uploadPath)) {
-						Files.createDirectories(uploadPath);
-					}
+        return mapToResponse(ground);
+    }
 
-					Files.copy(image.getInputStream(), uploadPath.resolve(fileName),
-							StandardCopyOption.REPLACE_EXISTING);
+    @Override
+    public List<GroundResponseDto> getAllGrounds() {
 
-					imageUrls.add("/uploads/" + fileName);
-				}
-			}
-		}
+        return groundRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
 
-		ground.setImageUrls(imageUrls);
+    @Override
+    public List<GroundResponseDto> getGroundsByStatus(
+            GroundStatus status) {
 
-		Ground savedGround = groundRepository.save(ground);
+        return groundRepository.findByStatus(status)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
 
-		return mapToResponse(savedGround);
-	}
+    // ==================== EDIT / UPDATE GROUND ====================
 
-	@Override
-	public GroundResponseDto getGroundById(Integer groundId) {
+    @Override
+    public GroundResponseDto updateGround(
+            Integer groundId,
+            GroundRequestDto dto,
+            MultipartFile[] images) throws IOException {
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
-		System.out.println(ground.getImageUrls());
-		return mapToResponse(ground);
-	}
+        // Fetch ground and amenities together.
+        Ground ground = groundRepository.findWithAmenitiesById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-	@Override
-	public List<GroundResponseDto> getAllGrounds() {
+        ground.setName(dto.getName());
+        ground.setLocation(dto.getLocation());
+        ground.setPricePerHour(dto.getPricePerHour());
+        ground.setSports(dto.getSports());
+        ground.setType(dto.getType());
+        ground.setAmenities(dto.getAmenities());
 
-		return groundRepository.findAll().stream().map(this::mapToResponse).toList();
-	}
+        ground.setOpeningTime(dto.getOpeningTime());
+        ground.setClosingTime(dto.getClosingTime());
 
-	@Override
-	public List<GroundResponseDto> getGroundsByStatus(GroundStatus status) {
+        ground.setSlotDurationMinutes(
+                dto.getSlotDurationMinutes() != null
+                        ? dto.getSlotDurationMinutes()
+                        : 60);
 
-		return groundRepository.findByStatus(status).stream().map(this::mapToResponse).toList();
-	}
+        // Update vendor.
+        Vendor vendor = vendorRepository.findById(dto.getVendorId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vendor not found"));
 
-	@Override
-	public GroundResponseDto updateGround(Integer groundId, GroundRequestDto dto, MultipartFile[] images)
-			throws IOException {
+        ground.setVendor(vendor);
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
+        // Preserve existing images unless new images are uploaded.
+        List<String> newImageUrls = saveImagesIfProvided(images);
 
-		ground.setName(dto.getName());
-		ground.setLocation(dto.getLocation());
-		ground.setPricePerHour(dto.getPricePerHour());
-		ground.setSports(dto.getSports());
-		ground.setType(dto.getType());
-		ground.setAmenities(dto.getAmenities());
+        if (newImageUrls != null) {
+            ground.setImageUrls(newImageUrls);
+        }
 
-		ground.setOpeningTime(dto.getOpeningTime());
-		ground.setClosingTime(dto.getClosingTime());
-		ground.setSlotDurationMinutes(
-				dto.getSlotDurationMinutes() != null
-						? dto.getSlotDurationMinutes()
-						: 60);
+        Ground updatedGround = groundRepository.save(ground);
 
-		// Update Vendor
-		Vendor vendor = vendorRepository.findById(dto.getVendorId())
-				.orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+        return mapToResponse(updatedGround);
+    }
 
-		ground.setVendor(vendor);
+    // ==================== DISABLE GROUND ====================
 
-		// Update Images (only if new images are uploaded)
-		if (images != null && images.length > 0 && !images[0].isEmpty()) {
+    @Override
+    public String disableGround(Integer groundId) {
 
-			List<String> imageUrls = new ArrayList<>();
+        Ground ground = groundRepository.findById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-			for (MultipartFile image : images) {
+        ground.setIsActive(false);
+        groundRepository.save(ground);
 
-				if (!image.isEmpty()) {
+        return "Ground disabled successfully.";
+    }
 
-					String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+    // ==================== ENABLE GROUND ====================
 
-					Path uploadPath = Paths.get("uploads");
+    @Override
+    public String enableGround(Integer groundId) {
 
-					if (!Files.exists(uploadPath)) {
-						Files.createDirectories(uploadPath);
-					}
+        Ground ground = groundRepository.findById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-					Files.copy(image.getInputStream(), uploadPath.resolve(fileName),
-							StandardCopyOption.REPLACE_EXISTING);
+        ground.setIsActive(true);
+        groundRepository.save(ground);
 
-					imageUrls.add("/uploads/" + fileName);
-				}
-			}
+        return "Ground enabled successfully.";
+    }
 
-			ground.setImageUrls(imageUrls);
+    // ==================== APPROVE GROUND ====================
 
-		} else {
-			ground.setImageUrls(ground.getImageUrls());
-		}
-		// else: do nothing, keep existing images
+    @Override
+    public String approveGround(Integer groundId) {
 
-		Ground updatedGround = groundRepository.save(ground);
+        Ground ground = groundRepository.findById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-		return mapToResponse(updatedGround);
-	}
+        ground.setStatus(GroundStatus.APPROVED);
+        groundRepository.save(ground);
 
-	@Override
-	public String disableGround(Integer groundId) {
+        return "Ground approved successfully.";
+    }
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
+    // ==================== REJECT GROUND ====================
 
-		ground.setIsActive(false);
+    @Override
+    public String rejectGround(Integer groundId) {
 
-		groundRepository.save(ground);
+        Ground ground = groundRepository.findById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-		return "Ground disabled successfully.";
-	}
+        ground.setStatus(GroundStatus.REJECTED);
+        groundRepository.save(ground);
 
-	@Override
-	public String enableGround(Integer groundId) {
+        return "Ground rejected successfully.";
+    }
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
+    // ==================== DELETE GROUND ====================
 
-		ground.setIsActive(true);
+    @Override
+    public String deleteGround(Integer groundId) {
 
-		groundRepository.save(ground);
+        Ground ground = groundRepository.findById(groundId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ground not found"));
 
-		return "Ground enabled successfully.";
-	}
+        groundRepository.delete(ground);
 
-	@Override
-	public String approveGround(Integer groundId) {
+        return "Ground deleted successfully.";
+    }
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
+    // ==================== IMAGE UPLOAD HELPERS ====================
 
-		ground.setStatus(GroundStatus.APPROVED);
+    private List<String> saveImages(MultipartFile[] images)
+            throws IOException {
 
-		groundRepository.save(ground);
+        List<String> imageUrls = new ArrayList<>();
 
-		return "Ground approved successfully.";
-	}
+        if (images == null) {
+            return imageUrls;
+        }
 
-	@Override
-	public String rejectGround(Integer groundId) {
+        Path uploadPath = Paths.get("uploads");
+        Files.createDirectories(uploadPath);
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
+        for (MultipartFile image : images) {
 
-		ground.setStatus(GroundStatus.REJECTED);
+            if (image != null && !image.isEmpty()) {
 
-		groundRepository.save(ground);
+                String originalName = image.getOriginalFilename();
+                String safeOriginalName = originalName == null
+                        ? "image"
+                        : Paths.get(originalName).getFileName().toString();
 
-		return "Ground rejected successfully.";
-	}
+                String fileName = UUID.randomUUID()
+                        + "_" + safeOriginalName;
 
-	@Override
-	public String deleteGround(Integer groundId) {
+                Files.copy(
+                        image.getInputStream(),
+                        uploadPath.resolve(fileName),
+                        StandardCopyOption.REPLACE_EXISTING);
 
-		Ground ground = groundRepository.findById(groundId)
-				.orElseThrow(() -> new ResourceNotFoundException("Ground not found"));
+                imageUrls.add("/uploads/" + fileName);
+            }
+        }
 
-		groundRepository.delete(ground);
+        return imageUrls;
+    }
 
-		return "Ground deleted successfully.";
-	}
+    /**
+     * Returns null when no new images were provided.
+     * This lets updateGround preserve the existing image URLs.
+     */
+    private List<String> saveImagesIfProvided(MultipartFile[] images)
+            throws IOException {
 
-	private GroundResponseDto mapToResponse(Ground ground) {
+        if (images == null) {
+            return null;
+        }
 
-		GroundResponseDto dto = new GroundResponseDto();
+        boolean hasNewImage = false;
 
-		dto.setId(ground.getId());
-		dto.setName(ground.getName());
-		dto.setLocation(ground.getLocation());
-		dto.setSports(ground.getSports());
-		dto.setPricePerHour(ground.getPricePerHour());
-		dto.setAmenities(ground.getAmenities());
-		dto.setImageUrls(ground.getImageUrls());
-		dto.setType(ground.getType());
-		dto.setIsActive(ground.getIsActive());
-		dto.setStatus(ground.getStatus());
+        for (MultipartFile image : images) {
+            if (image != null && !image.isEmpty()) {
+                hasNewImage = true;
+                break;
+            }
+        }
 
-		dto.setOpeningTime(ground.getOpeningTime());
-		dto.setClosingTime(ground.getClosingTime());
-		dto.setSlotDurationMinutes(ground.getSlotDurationMinutes());
+        if (!hasNewImage) {
+            return null;
+        }
 
-		if (ground.getVendor() != null) {
-			dto.setVendorId(ground.getVendor().getId());
-			dto.setVendorPhoneNumber(ground.getVendor().getPhoneNumber());
-		}
-		return dto;
-	}
+        return saveImages(images);
+    }
+
+    // ==================== ENTITY TO DTO MAPPING ====================
+
+    private GroundResponseDto mapToResponse(Ground ground) {
+
+        GroundResponseDto dto = new GroundResponseDto();
+
+        dto.setId(ground.getId());
+        dto.setName(ground.getName());
+        dto.setLocation(ground.getLocation());
+        dto.setSports(ground.getSports());
+        dto.setPricePerHour(ground.getPricePerHour());
+        dto.setAmenities(ground.getAmenities());
+        dto.setImageUrls(ground.getImageUrls());
+        dto.setType(ground.getType());
+        dto.setIsActive(ground.getIsActive());
+        dto.setStatus(ground.getStatus());
+
+        dto.setOpeningTime(ground.getOpeningTime());
+        dto.setClosingTime(ground.getClosingTime());
+        dto.setSlotDurationMinutes(ground.getSlotDurationMinutes());
+
+        if (ground.getVendor() != null) {
+            dto.setVendorId(ground.getVendor().getId());
+            dto.setVendorPhoneNumber(
+                    ground.getVendor().getPhoneNumber());
+        }
+
+        return dto;
+    }
 }

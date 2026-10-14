@@ -1,6 +1,7 @@
 package com.app.hourbook.controller.vendor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
@@ -26,396 +27,273 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class VendorPanelGroundController {
 
-    private final VendorPanelGroundService vendorPanelGroundService;
+	private final VendorPanelGroundService vendorPanelGroundService;
 
+	// =========================
+	// Ground List
+	// =========================
 
-    // =========================
-    // Ground List
-    // =========================
+	@GetMapping
+	public String grounds(
 
-    @GetMapping
-    public String grounds(
+			@RequestParam(defaultValue = "0") int page,
 
-            @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
 
-            @RequestParam(defaultValue = "10") int size,
+			@RequestParam(required = false) String search,
 
-            @RequestParam(required = false) String search,
+			HttpSession session,
 
-            HttpSession session,
+			Model model) {
 
-            Model model) {
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+		if (vendorId == null) {
 
-        if (vendorId == null) {
+			return "redirect:/vendor/login";
 
-            return "redirect:/vendor/login";
+		}
 
-        }
+		Page<Ground> groundPage = vendorPanelGroundService.getVendorGrounds(vendorId, page, size, search);
 
-        Page<Ground> groundPage =
-                vendorPanelGroundService.getVendorGrounds(
-                        vendorId,
-                        page,
-                        size,
-                        search
-                );
+		model.addAttribute("groundPage", groundPage);
 
-        model.addAttribute(
-                "groundPage",
-                groundPage
-        );
+		model.addAttribute("grounds", groundPage.getContent());
 
-        model.addAttribute(
-                "grounds",
-                groundPage.getContent()
-        );
+		model.addAttribute("search", search);
 
-        model.addAttribute(
-                "search",
-                search
-        );
+		return "vendor/grounds";
+	}
 
-        return "vendor/grounds";
-    }
+	// =========================
+	// Add Ground Page
+	// =========================
 
+	@GetMapping("/add")
+	public String addGroundPage(
 
-    // =========================
-    // Add Ground Page
-    // =========================
+			HttpSession session,
 
-    @GetMapping("/add")
-    public String addGroundPage(
+			Model model) {
 
-            HttpSession session,
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-            Model model) {
+		if (vendorId == null) {
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+			return "redirect:/vendor/login";
 
-        if (vendorId == null) {
+		}
 
-            return "redirect:/vendor/login";
+		VendorGroundRequestDto ground = new VendorGroundRequestDto();
 
-        }
+		/*
+		 * Version 1: Fixed 60-minute slots
+		 */
+		ground.setSlotDurationMinutes(60);
 
-        VendorGroundRequestDto ground =
-                new VendorGroundRequestDto();
+		model.addAttribute("ground", ground);
 
-        /*
-         * Version 1:
-         * Fixed 60-minute slots
-         */
-        ground.setSlotDurationMinutes(60);
+		return "vendor/add-ground";
+	}
 
-        model.addAttribute(
-                "ground",
-                ground
-        );
+	// =========================
+	// Save Ground
+	// =========================
 
-        return "vendor/add-ground";
-    }
+	@PostMapping("/add")
+	public String saveGround(
 
+			@Valid @ModelAttribute("ground") VendorGroundRequestDto request,
 
-    // =========================
-    // Save Ground
-    // =========================
+			BindingResult result,
 
-    @PostMapping("/add")
-    public String saveGround(
+			HttpSession session)
 
-            @Valid
-            @ModelAttribute("ground")
-            VendorGroundRequestDto request,
+			throws IOException {
 
-            BindingResult result,
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-            HttpSession session)
+		if (vendorId == null) {
 
-            throws IOException {
+			return "redirect:/vendor/login";
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+		}
 
-        if (vendorId == null) {
+		if (result.hasErrors()) {
 
-            return "redirect:/vendor/login";
+			return "vendor/add-ground";
 
-        }
+		}
 
-        if (result.hasErrors()) {
+		vendorPanelGroundService.saveGround(vendorId, request);
 
-            return "vendor/add-ground";
+		return "redirect:/vendor/grounds";
+	}
 
-        }
+	// =========================
+	// View Ground
+	// =========================
 
-        vendorPanelGroundService.saveGround(
-                vendorId,
-                request
-        );
+	@GetMapping("/view/{id}")
+	public String viewGround(
 
-        return "redirect:/vendor/grounds";
-    }
+			@PathVariable Integer id,
 
+			HttpSession session,
 
-    // =========================
-    // View Ground
-    // =========================
+			Model model) {
 
-    @GetMapping("/view/{id}")
-    public String viewGround(
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-            @PathVariable Integer id,
+		if (vendorId == null) {
 
-            HttpSession session,
+			return "redirect:/vendor/login";
 
-            Model model) {
+		}
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+		model.addAttribute("ground", vendorPanelGroundService.getGround(id, vendorId));
 
-        if (vendorId == null) {
+		return "vendor/view-ground";
+	}
 
-            return "redirect:/vendor/login";
+	// =========================
+	// Edit Ground Page
+	// =========================
 
-        }
+	@GetMapping("/edit/{id}")
+	public String editGround(@PathVariable Integer id, HttpSession session, Model model) {
 
-        model.addAttribute(
-                "ground",
-                vendorPanelGroundService.getGround(
-                        id,
-                        vendorId
-                )
-        );
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-        return "vendor/view-ground";
-    }
+		if (vendorId == null) {
+			return "redirect:/vendor/login";
+		}
 
+		Ground ground = vendorPanelGroundService.getGroundForEdit(id, vendorId);
 
-    // =========================
-    // Edit Ground Page
-    // =========================
+		VendorGroundRequestDto request = convertToDto(ground);
 
-    @GetMapping("/edit/{id}")
-    public String editGround(
+		model.addAttribute("ground", request);
 
-            @PathVariable Integer id,
+		return "vendor/edit-ground";
+	}
 
-            HttpSession session,
+	// =========================
+	// Update Ground
+	// =========================
 
-            Model model) {
+	@PostMapping("/edit/{id}")
+	public String updateGround(
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+			@PathVariable Integer id,
 
-        if (vendorId == null) {
+			@Valid @ModelAttribute("ground") VendorGroundRequestDto request,
 
-            return "redirect:/vendor/login";
+			BindingResult result,
 
-        }
+			HttpSession session)
 
-        Ground ground =
-                vendorPanelGroundService.getGroundForEdit(
-                        id,
-                        vendorId
-                );
+			throws IOException {
 
-        VendorGroundRequestDto request =
-                convertToDto(ground);
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-        model.addAttribute(
-                "ground",
-                request
-        );
+		if (vendorId == null) {
 
-        return "vendor/edit-ground";
-    }
+			return "redirect:/vendor/login";
 
+		}
 
-    // =========================
-    // Update Ground
-    // =========================
+		if (result.hasErrors()) {
 
-    @PostMapping("/edit/{id}")
-    public String updateGround(
+			/*
+			 * Existing image URLs are needed again because MultipartFile images cannot
+			 * restore the old images automatically.
+			 */
+			Ground existingGround = vendorPanelGroundService.getGround(id, vendorId);
 
-            @PathVariable Integer id,
+			request.setImageUrls(existingGround.getImageUrls());
 
-            @Valid
-            @ModelAttribute("ground")
-            VendorGroundRequestDto request,
+			return "vendor/edit-ground";
 
-            BindingResult result,
+		}
 
-            HttpSession session)
+		vendorPanelGroundService.updateGround(id, vendorId, request);
 
-            throws IOException {
+		return "redirect:/vendor/grounds";
+	}
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+	// =========================
+	// Active / Inactive
+	// =========================
 
-        if (vendorId == null) {
+	@PostMapping("/toggle/{id}")
+	public String toggleGround(
 
-            return "redirect:/vendor/login";
+			@PathVariable Integer id,
 
-        }
+			HttpSession session) {
 
-        if (result.hasErrors()) {
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-            /*
-             * Existing image URLs are needed again
-             * because MultipartFile images cannot
-             * restore the old images automatically.
-             */
-            Ground existingGround =
-                    vendorPanelGroundService.getGround(
-                            id,
-                            vendorId
-                    );
+		if (vendorId == null) {
 
-            request.setImageUrls(
-                    existingGround.getImageUrls()
-            );
+			return "redirect:/vendor/login";
 
-            return "vendor/edit-ground";
+		}
 
-        }
+		vendorPanelGroundService.toggleGroundStatus(id, vendorId);
 
-        vendorPanelGroundService.updateGround(
-                id,
-                vendorId,
-                request
-        );
+		return "redirect:/vendor/grounds";
+	}
 
-        return "redirect:/vendor/grounds";
-    }
+	// =========================
+	// Delete Ground
+	// =========================
 
+	@PostMapping("/delete/{id}")
+	public String deleteGround(
 
-    // =========================
-    // Active / Inactive
-    // =========================
+			@PathVariable Integer id,
 
-    @PostMapping("/toggle/{id}")
-    public String toggleGround(
+			HttpSession session) {
 
-            @PathVariable Integer id,
+		Integer vendorId = (Integer) session.getAttribute("vendorId");
 
-            HttpSession session) {
+		if (vendorId == null) {
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+			return "redirect:/vendor/login";
 
-        if (vendorId == null) {
+		}
 
-            return "redirect:/vendor/login";
+		vendorPanelGroundService.deleteGround(id, vendorId);
 
-        }
+		return "redirect:/vendor/grounds";
+	}
 
-        vendorPanelGroundService.toggleGroundStatus(
-                id,
-                vendorId
-        );
+	// =========================
+	// Entity → DTO
+	// =========================
 
-        return "redirect:/vendor/grounds";
-    }
+	private VendorGroundRequestDto convertToDto(Ground ground) {
 
+		VendorGroundRequestDto dto = new VendorGroundRequestDto();
 
-    // =========================
-    // Delete Ground
-    // =========================
+		dto.setId(ground.getId());
+		dto.setName(ground.getName());
+		dto.setLocation(ground.getLocation());
+		dto.setSports(ground.getSports());
+		dto.setPricePerHour(ground.getPricePerHour());
+		dto.setType(ground.getType());
 
-    @PostMapping("/delete/{id}")
-    public String deleteGround(
+		dto.setAmenities(ground.getAmenities() == null ? new ArrayList<>() : new ArrayList<>(ground.getAmenities()));
 
-            @PathVariable Integer id,
+		dto.setImageUrls(ground.getImageUrls() == null ? new ArrayList<>() : new ArrayList<>(ground.getImageUrls()));
 
-            HttpSession session) {
+		dto.setOpeningTime(ground.getOpeningTime());
+		dto.setClosingTime(ground.getClosingTime());
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+		dto.setSlotDurationMinutes(ground.getSlotDurationMinutes() != null ? ground.getSlotDurationMinutes() : 60);
 
-        if (vendorId == null) {
-
-            return "redirect:/vendor/login";
-
-        }
-
-        vendorPanelGroundService.deleteGround(
-                id,
-                vendorId
-        );
-
-        return "redirect:/vendor/grounds";
-    }
-
-
-    // =========================
-    // Entity → DTO
-    // =========================
-
-    private VendorGroundRequestDto convertToDto(
-            Ground ground) {
-
-        VendorGroundRequestDto dto =
-                new VendorGroundRequestDto();
-
-        dto.setId(
-                ground.getId()
-        );
-
-        dto.setName(
-                ground.getName()
-        );
-
-        dto.setLocation(
-                ground.getLocation()
-        );
-
-        dto.setSports(
-                ground.getSports()
-        );
-
-        dto.setPricePerHour(
-                ground.getPricePerHour()
-        );
-
-        dto.setType(
-                ground.getType()
-        );
-
-        dto.setAmenities(
-                ground.getAmenities()
-        );
-
-        dto.setImageUrls(
-                ground.getImageUrls()
-        );
-
-        /*
-         * Operating hours
-         */
-        dto.setOpeningTime(
-                ground.getOpeningTime()
-        );
-
-        dto.setClosingTime(
-                ground.getClosingTime()
-        );
-
-        /*
-         * Version 1:
-         * Always use 60-minute slots.
-         */
-        dto.setSlotDurationMinutes(
-                ground.getSlotDurationMinutes() != null
-                        ? ground.getSlotDurationMinutes()
-                        : 60
-        );
-
-        return dto;
-    }
-
+		return dto;
+	}
 }

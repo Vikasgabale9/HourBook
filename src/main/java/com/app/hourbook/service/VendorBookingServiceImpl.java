@@ -26,9 +26,7 @@ public class VendorBookingServiceImpl implements VendorBookingService {
     public List<Booking> getVendorBookings(Integer vendorId) {
 
         return bookingRepository
-                .findByGround_Vendor_IdOrderByBookingDateDescStartTimeDesc(
-                        vendorId
-                );
+                .findVendorBookingsWithUserAndGround(vendorId);
     }
 
     // =========================================
@@ -40,6 +38,7 @@ public class VendorBookingServiceImpl implements VendorBookingService {
             Integer vendorId,
             String status) {
 
+        // If status is empty, return all vendor bookings.
         if (status == null || status.isBlank()) {
             return getVendorBookings(vendorId);
         }
@@ -51,13 +50,15 @@ public class VendorBookingServiceImpl implements VendorBookingService {
                     status.trim().toUpperCase()
             );
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException(
-                    "Invalid booking status: " + status
+            throw new IllegalArgumentException(
+                    "Invalid booking status: " + status,
+                    e
             );
         }
 
+        // Fetch bookings with user and ground for the selected status.
         return bookingRepository
-                .findByGround_Vendor_IdAndStatusOrderByBookingDateDescStartTimeDesc(
+                .findVendorBookingsWithUserAndGroundByStatus(
                         vendorId,
                         bookingStatus
                 );

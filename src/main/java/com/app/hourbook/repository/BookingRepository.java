@@ -103,4 +103,30 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     java.util.Optional<Booking> findByRazorpayOrderId(String razorpayOrderId);
+    
+    @Query("""
+    	    SELECT b
+    	    FROM Booking b
+    	    JOIN FETCH b.user
+    	    JOIN FETCH b.ground
+    	    WHERE b.ground.vendor.id = :vendorId
+    	    ORDER BY b.bookingDate DESC, b.startTime DESC
+    	    """)
+    	List<Booking> findVendorBookingsWithUserAndGround(
+    	        @Param("vendorId") Integer vendorId
+    	);
+
+    	@Query("""
+    	    SELECT b
+    	    FROM Booking b
+    	    JOIN FETCH b.user
+    	    JOIN FETCH b.ground
+    	    WHERE b.ground.vendor.id = :vendorId
+    	      AND b.status = :status
+    	    ORDER BY b.bookingDate DESC, b.startTime DESC
+    	    """)
+    	List<Booking> findVendorBookingsWithUserAndGroundByStatus(
+    	        @Param("vendorId") Integer vendorId,
+    	        @Param("status") BookingStatus status
+    	);
 }

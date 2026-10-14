@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -22,6 +23,9 @@ public interface GroundRepository
         extends JpaRepository<Ground, Integer>,
         JpaSpecificationExecutor<Ground> {
 
+	  @EntityGraph(attributePaths = {"amenities"})
+	    Optional<Ground> findWithAmenitiesById(Integer id);
+	
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT g FROM Ground g WHERE g.id = :groundId")
 	Optional<Ground> findByIdForUpdate(
