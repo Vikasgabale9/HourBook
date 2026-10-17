@@ -4,6 +4,7 @@
 <head>
     <title>Add Ground</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
 </head>
 
 <body>
@@ -13,7 +14,10 @@
 
 <div class="content">
 
-    <h2>Add Ground</h2>
+    <div class="page-header">
+        <h2>Add Ground</h2>
+        <a th:href="@{/admin/grounds}" class="add-btn">← Back to Grounds</a>
+    </div>
 
     <div class="table-container">
 
@@ -23,32 +27,40 @@
 
             <!-- Ground Name -->
             <div class="form-group">
-                <label>Ground Name</label>
-                <input type="text" name="name" required placeholder="Enter ground name">
+                <label for="groundName">Ground Name</label>
+                <input id="groundName"
+                       type="text" name="name" required
+                       placeholder="Enter ground name">
             </div>
 
             <!-- Location -->
             <div class="form-group">
-                <label>Location</label>
-                <input type="text" name="location" required placeholder="Enter location">
+                <label for="groundLocation">Location</label>
+                <input id="groundLocation"
+                       type="text" name="location" required
+                       placeholder="Enter location">
             </div>
 
             <!-- Sport -->
             <div class="form-group">
-                <label>Sport</label>
-                <input type="text" name="sports" required placeholder="e.g. Cricket, Football">
+                <label for="groundSports">Sport</label>
+                <input id="groundSports"
+                       type="text" name="sports" required
+                       placeholder="e.g. Cricket, Football">
             </div>
 
             <!-- Price -->
             <div class="form-group">
-                <label>Price Per Hour (₹)</label>
-                <input type="number" name="pricePerHour" required placeholder="Enter price" min="0">
+                <label for="groundPrice">Price Per Hour (₹)</label>
+                <input id="groundPrice"
+                       type="number" name="pricePerHour" required
+                       placeholder="Enter price" min="0">
             </div>
 
             <!-- Ground Type -->
             <div class="form-group">
-                <label>Ground Type</label>
-                <select name="type" required>
+                <label for="groundType">Ground Type</label>
+                <select id="groundType" name="type" required>
                     <option value="">Select Ground Type</option>
                     <option value="GRASS">Grass</option>
                     <option value="TURF_ASTROTURF">Turf / Astroturf</option>
@@ -59,8 +71,8 @@
 
             <!-- Vendor -->
             <div class="form-group">
-                <label>Vendor</label>
-                <select name="vendorId" required>
+                <label for="groundVendor">Vendor</label>
+                <select id="groundVendor" name="vendorId" required>
                     <option value="">Select Vendor</option>
                     <option th:each="vendor : ${vendors}"
                             th:value="${vendor.id}"
@@ -71,18 +83,20 @@
 
             <!-- Ground Operating Hours -->
             <div class="form-group">
-                <label>Opening Time</label>
-                <input type="time" name="openingTime" required>
+                <label for="openingTime">Opening Time</label>
+                <input id="openingTime" type="time" name="openingTime" required>
             </div>
 
             <div class="form-group">
-                <label>Closing Time</label>
-                <input type="time" name="closingTime" required>
+                <label for="closingTime">Closing Time</label>
+                <input id="closingTime" type="time" name="closingTime" required>
             </div>
 
             <div class="form-group">
-                <label>Booking Slot Duration (Minutes)</label>
-                <input type="number" name="slotDurationMinutes" value="60" min="15" step="15" required>
+                <label for="slotDuration">Booking Slot Duration (Minutes)</label>
+                <input id="slotDuration"
+                       type="number" name="slotDurationMinutes"
+                       value="60" min="15" step="15" required>
             </div>
 
             <!-- Amenities -->
@@ -118,8 +132,9 @@
 
             <!-- Images -->
             <div class="form-group">
-                <label>Ground Images</label>
-                <input type="file" name="images" multiple accept="image/*">
+                <label for="groundImages">Ground Images</label>
+                <input id="groundImages"
+                       type="file" name="images" multiple accept="image/*">
             </div>
 
             <!-- Actions -->

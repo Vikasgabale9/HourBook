@@ -4,6 +4,7 @@
 <head>
     <title>Edit Ground</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
 </head>
 
 <body>
@@ -13,7 +14,7 @@
 
 <div class="content">
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div class="page-header">
         <h2>Edit Ground</h2>
         <a th:href="@{/admin/grounds}" class="add-btn">← Back to Grounds</a>
     </div>
@@ -26,32 +27,43 @@
 
             <!-- Ground Name -->
             <div class="form-group">
-                <label>Ground Name</label>
-                <input type="text" name="name" th:value="${ground.name}" required placeholder="Enter ground name">
+                <label for="groundName">Ground Name</label>
+                <input id="groundName"
+                       type="text" name="name"
+                       th:value="${ground.name}" required
+                       placeholder="Enter ground name">
             </div>
 
             <!-- Location -->
             <div class="form-group">
-                <label>Location</label>
-                <input type="text" name="location" th:value="${ground.location}" required placeholder="Enter location">
+                <label for="groundLocation">Location</label>
+                <input id="groundLocation"
+                       type="text" name="location"
+                       th:value="${ground.location}" required
+                       placeholder="Enter location">
             </div>
 
             <!-- Sport -->
             <div class="form-group">
-                <label>Sport</label>
-                <input type="text" name="sports" th:value="${ground.sports}" required placeholder="e.g. Cricket, Football">
+                <label for="groundSports">Sport</label>
+                <input id="groundSports"
+                       type="text" name="sports"
+                       th:value="${ground.sports}" required
+                       placeholder="e.g. Cricket, Football">
             </div>
 
             <!-- Price -->
             <div class="form-group">
-                <label>Price Per Hour (₹)</label>
-                <input type="number" name="pricePerHour" th:value="${ground.pricePerHour}" required min="0">
+                <label for="groundPrice">Price Per Hour (₹)</label>
+                <input id="groundPrice"
+                       type="number" name="pricePerHour"
+                       th:value="${ground.pricePerHour}" required min="0">
             </div>
 
             <!-- Ground Type -->
             <div class="form-group">
-                <label>Ground Type</label>
-                <select name="type">
+                <label for="groundType">Ground Type</label>
+                <select id="groundType" name="type">
                     <option value="GRASS"
                             th:selected="${ground.type.name()=='GRASS'}">Grass</option>
                     <option value="TURF_ASTROTURF"
@@ -65,8 +77,8 @@
 
             <!-- Vendor -->
             <div class="form-group">
-                <label>Vendor</label>
-                <select name="vendorId">
+                <label for="groundVendor">Vendor</label>
+                <select id="groundVendor" name="vendorId">
                     <option value="">Select Vendor</option>
                     <option th:each="vendor : ${vendors}"
                             th:value="${vendor.id}"
@@ -78,18 +90,23 @@
 
             <!-- Ground Operating Hours -->
             <div class="form-group">
-                <label>Opening Time</label>
-                <input type="time" name="openingTime" th:value="${ground.openingTime}" required>
+                <label for="openingTime">Opening Time</label>
+                <input id="openingTime"
+                       type="time" name="openingTime"
+                       th:value="${ground.openingTime}" required>
             </div>
 
             <div class="form-group">
-                <label>Closing Time</label>
-                <input type="time" name="closingTime" th:value="${ground.closingTime}" required>
+                <label for="closingTime">Closing Time</label>
+                <input id="closingTime"
+                       type="time" name="closingTime"
+                       th:value="${ground.closingTime}" required>
             </div>
 
             <div class="form-group">
-                <label>Booking Slot Duration (Minutes)</label>
-                <input type="number" name="slotDurationMinutes"
+                <label for="slotDuration">Booking Slot Duration (Minutes)</label>
+                <input id="slotDuration"
+                       type="number" name="slotDurationMinutes"
                        th:value="${ground.slotDurationMinutes != null ? ground.slotDurationMinutes : 60}"
                        min="15" step="15" required>
             </div>
@@ -142,181 +159,16 @@
                          alt="Ground image">
                 </div>
                 <p th:if="${ground.imageUrls == null || #lists.isEmpty(ground.imageUrls)}"
-                   style="color:#94a3b8;">No images available.</p>
+                   style="color:#94a3b8;margin-top:8px;">
+                    No images available.
+                </p>
             </div>
 
             <!-- Upload New Images -->
             <div class="form-group">
-                <label>Upload New Images</label>
-                <input type="file" name="images" multiple accept="image/*">
-            </div>
-
-            <!-- Actions -->
-            <div class="form-actions">
-                <button type="submit" class="btn-success">Update Ground</button>
-                <a th:href="@{/admin/grounds}" class="btn-danger">Cancel</a>
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<div th:replace="~{admin/fragments/footer :: footer}"></div>
-
-</body>
-</html><!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-
-<head>
-    <title>Edit Ground</title>
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
-</head>
-
-<body>
-
-<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
-<div th:replace="~{admin/fragments/header :: header}"></div>
-
-<div class="content">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h2>Edit Ground</h2>
-        <a th:href="@{/admin/grounds}" class="add-btn">← Back to Grounds</a>
-    </div>
-
-    <div class="table-container">
-
-        <form th:action="@{'/admin/grounds/update/' + ${ground.id}}"
-              method="post"
-              enctype="multipart/form-data">
-
-            <!-- Ground Name -->
-            <div class="form-group">
-                <label>Ground Name</label>
-                <input type="text" name="name" th:value="${ground.name}" required placeholder="Enter ground name">
-            </div>
-
-            <!-- Location -->
-            <div class="form-group">
-                <label>Location</label>
-                <input type="text" name="location" th:value="${ground.location}" required placeholder="Enter location">
-            </div>
-
-            <!-- Sport -->
-            <div class="form-group">
-                <label>Sport</label>
-                <input type="text" name="sports" th:value="${ground.sports}" required placeholder="e.g. Cricket, Football">
-            </div>
-
-            <!-- Price -->
-            <div class="form-group">
-                <label>Price Per Hour (₹)</label>
-                <input type="number" name="pricePerHour" th:value="${ground.pricePerHour}" required min="0">
-            </div>
-
-            <!-- Ground Type -->
-            <div class="form-group">
-                <label>Ground Type</label>
-                <select name="type">
-                    <option value="GRASS"
-                            th:selected="${ground.type.name()=='GRASS'}">Grass</option>
-                    <option value="TURF_ASTROTURF"
-                            th:selected="${ground.type.name()=='TURF_ASTROTURF'}">Turf / Astroturf</option>
-                    <option value="CLAY"
-                            th:selected="${ground.type.name()=='CLAY'}">Clay</option>
-                    <option value="SYNTHETIC_MATTING"
-                            th:selected="${ground.type.name()=='SYNTHETIC_MATTING'}">Synthetic Matting</option>
-                </select>
-            </div>
-
-            <!-- Vendor -->
-            <div class="form-group">
-                <label>Vendor</label>
-                <select name="vendorId">
-                    <option value="">Select Vendor</option>
-                    <option th:each="vendor : ${vendors}"
-                            th:value="${vendor.id}"
-                            th:text="${vendor.phoneNumber}"
-                            th:selected="${ground.vendorId != null && vendor.id == ground.vendorId}">
-                    </option>
-                </select>
-            </div>
-
-            <!-- Ground Operating Hours -->
-            <div class="form-group">
-                <label>Opening Time</label>
-                <input type="time" name="openingTime" th:value="${ground.openingTime}" required>
-            </div>
-
-            <div class="form-group">
-                <label>Closing Time</label>
-                <input type="time" name="closingTime" th:value="${ground.closingTime}" required>
-            </div>
-
-            <div class="form-group">
-                <label>Booking Slot Duration (Minutes)</label>
-                <input type="number" name="slotDurationMinutes"
-                       th:value="${ground.slotDurationMinutes != null ? ground.slotDurationMinutes : 60}"
-                       min="15" step="15" required>
-            </div>
-
-            <!-- Amenities -->
-            <div class="form-group">
-                <label>Amenities</label>
-                <div class="checkbox-group">
-                    <label>
-                        <input type="checkbox" name="amenities" value="FLOODLIGHTS"
-                               th:checked="${ground.amenities.contains(T(com.app.hourbook.enums.Amenities).FLOODLIGHTS)}">
-                        Flood Lights
-                    </label>
-                    <label>
-                        <input type="checkbox" name="amenities" value="LOCKERROOMS"
-                               th:checked="${ground.amenities.contains(T(com.app.hourbook.enums.Amenities).LOCKERROOMS)}">
-                        Locker Rooms
-                    </label>
-                    <label>
-                        <input type="checkbox" name="amenities" value="PARKING"
-                               th:checked="${ground.amenities.contains(T(com.app.hourbook.enums.Amenities).PARKING)}">
-                        Parking
-                    </label>
-                    <label>
-                        <input type="checkbox" name="amenities" value="DRINKINGWATER"
-                               th:checked="${ground.amenities.contains(T(com.app.hourbook.enums.Amenities).DRINKINGWATER)}">
-                        Drinking Water
-                    </label>
-                    <label>
-                        <input type="checkbox" name="amenities" value="CAFETERIA"
-                               th:checked="${ground.amenities.contains(T(com.app.hourbook.enums.Amenities).CAFETERIA)}">
-                        Cafeteria
-                    </label>
-                    <label>
-                        <input type="checkbox" name="amenities" value="EQUIPMENTHIRE"
-                               th:checked="${ground.amenities.contains(T(com.app.hourbook.enums.Amenities).EQUIPMENTHIRE)}">
-                        Equipment Hire
-                    </label>
-                </div>
-            </div>
-
-            <!-- Existing Images -->
-            <div class="form-group">
-                <label>Current Images</label>
-                <div class="preview-images"
-                     th:if="${ground.imageUrls != null && !#lists.isEmpty(ground.imageUrls)}">
-                    <img th:each="image : ${ground.imageUrls}"
-                         th:src="${image}"
-                         class="ground-image"
-                         alt="Ground image">
-                </div>
-                <p th:if="${ground.imageUrls == null || #lists.isEmpty(ground.imageUrls)}"
-                   style="color:#94a3b8;">No images available.</p>
-            </div>
-
-            <!-- Upload New Images -->
-            <div class="form-group">
-                <label>Upload New Images</label>
-                <input type="file" name="images" multiple accept="image/*">
+                <label for="groundImages">Upload New Images</label>
+                <input id="groundImages"
+                       type="file" name="images" multiple accept="image/*">
             </div>
 
             <!-- Actions -->

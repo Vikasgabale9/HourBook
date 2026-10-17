@@ -3,72 +3,181 @@
 <head>
     <title>Admin Login</title>
 
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
     <style>
-        *{
+        :root{
+            --hb-primary:#2563eb;
+            --hb-primary-dark:#1d4ed8;
+            --hb-primary-darker:#1e3a8a;
+            --hb-bg:#f4f7fb;
+            --hb-card:#ffffff;
+            --hb-text:#374151;
+            --hb-text-strong:#1e293b;
+            --hb-muted:#64748b;
+            --hb-border:#e5e7eb;
+            --hb-danger-soft:#fee2e2;
+            --hb-danger-ink:#991b1b;
+            --hb-radius-lg:16px;
+            --hb-radius-md:10px;
+            --hb-shadow:0 8px 24px rgba(15,23,42,.08);
+        }
+
+        *,*::before,*::after{
             margin:0;
             padding:0;
             box-sizing:border-box;
-            font-family:Arial, sans-serif;
         }
 
+        html{ -webkit-text-size-adjust:100%; }
+
         body{
+            /* 100vh fallback then 100dvh for mobile browser chrome */
+            min-height:100vh;
+            min-height:100dvh;
             display:flex;
             justify-content:center;
             align-items:center;
-            height:100vh;
-            background:#f4f7fc;
+            padding:24px 16px;
+            font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+            background:
+                    radial-gradient(circle at 15% 20%, rgba(37,99,235,.06), transparent 45%),
+                    radial-gradient(circle at 85% 85%, rgba(99,102,241,.06), transparent 50%),
+                    var(--hb-bg);
+            color:var(--hb-text);
+            font-size:15px;
+            line-height:1.55;
+            -webkit-font-smoothing:antialiased;
+            overflow-x:hidden;
         }
 
         .login-container{
-            background:white;
-            padding:40px;
-            border-radius:12px;
-            box-shadow:0 4px 15px rgba(0,0,0,0.1);
-            width:350px;
+            background:var(--hb-card);
+            border:1px solid var(--hb-border);
+            padding:34px 26px;
+            border-radius:var(--hb-radius-lg);
+            box-shadow:var(--hb-shadow);
+            width:100%;
+            max-width:400px;
+        }
+
+        .login-brand{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:9px;
+            margin-bottom:6px;
+            font-size:22px;
+            font-weight:800;
+            letter-spacing:.4px;
+            color:var(--hb-primary-darker);
+        }
+
+        .login-brand::before{
+            content:"";
+            width:12px;
+            height:12px;
+            border-radius:4px;
+            background:linear-gradient(135deg,#60a5fa,#93c5fd);
+            flex:0 0 auto;
         }
 
         h2{
             text-align:center;
-            margin-bottom:25px;
-            color:#333;
+            margin:4px 0 26px;
+            font-size:19px;
+            font-weight:700;
+            letter-spacing:-.01em;
+            color:var(--hb-text-strong);
         }
 
-        .form-group{
-            margin-bottom:15px;
-        }
+        .form-group{ margin-bottom:16px; }
 
         label{
             display:block;
-            margin-bottom:5px;
-            color:#555;
+            margin-bottom:7px;
+            font-size:13.5px;
+            font-weight:600;
+            color:var(--hb-text);
         }
 
         input{
             width:100%;
-            padding:10px;
-            border:1px solid #ccc;
-            border-radius:6px;
+            padding:12px 14px;
+            border:1px solid var(--hb-border);
+            border-radius:var(--hb-radius-md);
+            background:#fff;
+            color:var(--hb-text);
+            font-family:inherit;
+            font-size:15px;
+            min-height:48px;
+            transition:border-color .16s ease, box-shadow .16s ease;
+        }
+
+        input::placeholder{ color:#94a3b8; }
+
+        input:focus{
+            outline:none;
+            border-color:var(--hb-primary);
+            box-shadow:0 0 0 3px rgba(37,99,235,.15);
         }
 
         button{
             width:100%;
-            padding:12px;
+            padding:13px;
             border:none;
-            border-radius:6px;
-            background:#3498db;
-            color:white;
-            font-size:16px;
+            border-radius:var(--hb-radius-md);
+            background:var(--hb-primary);
+            color:#fff;
+            font-family:inherit;
+            font-size:15.5px;
+            font-weight:700;
             cursor:pointer;
+            min-height:50px;
+            margin-top:6px;
+            transition:background .16s ease, transform .1s ease;
         }
 
-        button:hover{
-            background:#2980b9;
+        button:hover{ background:var(--hb-primary-dark); }
+
+        button:active{ transform:translateY(1px); }
+
+        button:focus-visible{
+            outline:3px solid rgba(37,99,235,.45);
+            outline-offset:2px;
         }
 
         .error{
-            color:red;
+            display:block;
+            margin-top:16px;
+            padding:11px 14px;
+            border-radius:var(--hb-radius-md);
+            background:var(--hb-danger-soft);
+            border:1px solid #fecaca;
+            color:var(--hb-danger-ink);
+            font-size:13.5px;
+            font-weight:600;
             text-align:center;
-            margin-top:15px;
+            word-wrap:break-word;
+            overflow-wrap:anywhere;
+        }
+
+        @media (max-width:479px){
+            body{ padding:16px 12px; }
+            .login-container{
+                padding:26px 18px;
+                border-radius:14px;
+            }
+            h2{
+                font-size:18px;
+                margin-bottom:22px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            *,*::before,*::after{
+                transition-duration:.01ms !important;
+                animation-duration:.01ms !important;
+            }
         }
     </style>
 </head>
@@ -76,26 +185,32 @@
 
 <div class="login-container">
 
+    <div class="login-brand">HourBook</div>
+
     <h2>Admin Login</h2>
 
     <form th:action="@{/admin/login}" method="post">
 
         <div class="form-group">
-            <label>Email</label>
+            <label for="adminEmail">Email</label>
             <input
-                type="email"
-                name="email"
-                placeholder="Enter Email"
-                required>
+                    id="adminEmail"
+                    type="email"
+                    name="email"
+                    placeholder="Enter Email"
+                    autocomplete="username"
+                    required>
         </div>
 
         <div class="form-group">
-            <label>Password</label>
+            <label for="adminPassword">Password</label>
             <input
-                type="password"
-                name="password"
-                placeholder="Enter Password"
-                required>
+                    id="adminPassword"
+                    type="password"
+                    name="password"
+                    placeholder="Enter Password"
+                    autocomplete="current-password"
+                    required>
         </div>
 
         <button type="submit">Login</button>

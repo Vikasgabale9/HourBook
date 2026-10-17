@@ -1,48 +1,53 @@
 <div th:fragment="sidebar">
 
-    <aside class="bg-dark text-white position-fixed top-0 start-0 vh-100 shadow" style="width:260px; z-index:1000;">
+    <aside class="vp-sidebar" id="vpSidebar" aria-label="Vendor navigation">
 
-        <div class="text-center py-4 border-bottom">
+        <div class="vp-brand">
 
-            <h3 class="fw-bold">
-                <i class="bi bi-dribbble text-primary"></i>
-                HourBook
-            </h3>
+            <span class="vp-brand-mark" aria-hidden="true">
+                <i class="bi bi-dribbble"></i>
+            </span>
 
-            <small class="text-secondary">
-                Vendor Panel
-            </small>
+            <div>
+                <span class="vp-brand-name">HourBook</span>
+                <small>Vendor Panel</small>
+            </div>
+
+            <button type="button"
+                    class="vp-close"
+                    id="vpClose"
+                    aria-label="Close navigation menu">&times;</button>
 
         </div>
 
-        <div class="mt-4">
+        <nav class="vp-nav">
 
-            <a th:href="@{/vendor/dashboard}" class="nav-link text-white px-4 py-3">
+            <a th:href="@{/vendor/dashboard}" class="nav-link px-4 py-3">
                 <i class="bi bi-speedometer2 me-2"></i>
                 Dashboard
             </a>
 
-			<a th:href="@{/vendor/profile}" class="nav-link text-white px-4 py-3">
-			    <i class="bi bi-person-circle me-2"></i>
-			    Profile
-			</a>
+            <a th:href="@{/vendor/profile}" class="nav-link px-4 py-3">
+                <i class="bi bi-person-circle me-2"></i>
+                Profile
+            </a>
 
-            <a th:href="@{/vendor/grounds}" class="nav-link text-white px-4 py-3">
+            <a th:href="@{/vendor/grounds}" class="nav-link px-4 py-3">
                 <i class="bi bi-building me-2"></i>
                 Grounds
             </a>
 
-            <a th:href="@{/vendor/bookings}" class="nav-link text-white px-4 py-3">
+            <a th:href="@{/vendor/bookings}" class="nav-link px-4 py-3">
                 <i class="bi bi-calendar-check me-2"></i>
                 Bookings
             </a>
 
-            <a th:href="@{/vendor/revenue}" class="nav-link text-white px-4 py-3">
+            <a th:href="@{/vendor/revenue}" class="nav-link px-4 py-3">
                 <i class="bi bi-cash-stack me-2"></i>
                 Revenue
             </a>
 
-            <a th:href="@{/vendor/kyc}" class="nav-link text-white px-4 py-3">
+            <a th:href="@{/vendor/kyc}" class="nav-link px-4 py-3">
                 <i class="bi bi-shield-check me-2"></i>
                 KYC
             </a>
@@ -54,8 +59,27 @@
                 Logout
             </a>
 
-        </div>
+        </nav>
 
     </aside>
+
+    <!-- Marks the current page in the sidebar (longest matching path wins) -->
+    <script>
+        (function () {
+            var path = window.location.pathname.replace(/\/+$/, "");
+            var best = null, bestLen = -1;
+            document.querySelectorAll("#vpSidebar a.nav-link").forEach(function (link) {
+                var p = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, "");
+                if ((path === p || path.indexOf(p + "/") === 0) && p.length > bestLen) {
+                    best = link;
+                    bestLen = p.length;
+                }
+            });
+            if (best && !best.classList.contains("text-danger")) {
+                best.classList.add("active");
+                best.setAttribute("aria-current", "page");
+            }
+        })();
+    </script>
 
 </div>

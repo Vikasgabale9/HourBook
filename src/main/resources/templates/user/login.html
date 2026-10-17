@@ -1,428 +1,241 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
-    <meta charset="UTF-8">
+	<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
+	<meta name="viewport"
+		  content="width=device-width, initial-scale=1">
 
-    <title>User Login | HourBook</title>
+	<title>User Login | HourBook</title>
 
 
-    <!-- Bootstrap -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+		  rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+	<!-- Bootstrap -->
 
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+		  rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
-          rel="stylesheet">
+	<!-- Bootstrap Icons -->
 
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+		  rel="stylesheet">
 
-    <style>
 
-        body {
+	<!-- HourBook User Panel design system -->
 
-            background: #f5f7fb;
-
-            min-height: 100vh;
-
-            display: flex;
-
-            justify-content: center;
-
-            align-items: center;
-
-            padding: 20px;
-
-        }
-
-
-        .login-card {
-
-            width: 420px;
-
-            border: none;
-
-            border-radius: 18px;
-
-            overflow: hidden;
-
-            background: white;
-
-            box-shadow:
-                0 10px 35px rgba(0, 0, 0, 0.12);
-
-        }
-
-
-        .login-header {
-
-            background: #2563eb;
-
-            color: white;
-
-            text-align: center;
-
-            padding: 30px 20px;
-
-        }
-
-
-        .logo-icon {
-
-            font-size: 48px;
-
-            margin-bottom: 5px;
-
-        }
-
-
-        .brand-name {
-
-            font-size: 30px;
-
-            font-weight: 700;
-
-        }
-
-
-        .login-subtitle {
-
-            opacity: .9;
-
-            margin-top: 4px;
-
-        }
-
-
-        .login-body {
-
-            padding: 32px;
-
-        }
-
-
-        .form-label {
-
-            font-weight: 600;
-
-        }
-
-
-        .input-group-text {
-
-            background: white;
-
-            border-right: none;
-
-        }
-
-
-        .input-group .form-control {
-
-            border-left: none;
-
-        }
-
-
-        .form-control {
-
-            height: 48px;
-
-            border-radius: 10px;
-
-        }
-
-
-        .input-group .form-control {
-
-            border-radius: 0 10px 10px 0;
-
-        }
-
-
-        .input-group-text {
-
-            border-radius: 10px 0 0 10px;
-
-        }
-
-
-        .login-button {
-
-            height: 48px;
-
-            border-radius: 10px;
-
-            font-weight: 600;
-
-            font-size: 16px;
-
-        }
-
-
-        .register-link {
-
-            text-decoration: none;
-
-            font-weight: 600;
-
-        }
-
-
-        .forgot-link {
-
-            text-decoration: none;
-
-            font-size: 14px;
-
-        }
-
-
-        .divider {
-
-            display: flex;
-
-            align-items: center;
-
-            text-align: center;
-
-            color: #6c757d;
-
-            margin: 24px 0;
-
-        }
-
-
-        .divider::before,
-        .divider::after {
-
-            content: "";
-
-            flex: 1;
-
-            border-bottom: 1px solid #dee2e6;
-
-        }
-
-
-        .divider span {
-
-            padding: 0 12px;
-
-            font-size: 13px;
-
-        }
-
-    </style>
+	<link th:href="@{/css/hourbook-user.css}"
+		  rel="stylesheet">
 
 </head>
 
 
-<body>
+<body class="hb-body">
 
 
-<div class="card login-card">
+<main class="hb-auth">
+
+	<div class="hb-auth__card">
 
 
-    <!-- ================================================= -->
-    <!-- HEADER -->
-    <!-- ================================================= -->
+		<!-- ================================================= -->
+		<!-- HEADER -->
+		<!-- ================================================= -->
 
-    <div class="login-header">
+		<div class="hb-auth__head">
 
-        <div class="logo-icon">
+			<i class="bi bi-calendar-check-fill" aria-hidden="true"></i>
 
-            <i class="bi bi-calendar-check-fill"></i>
+			<h1 class="hb-auth__brand">
 
-        </div>
+				HourBook
 
+			</h1>
 
-        <div class="brand-name">
+			<p class="hb-auth__sub">
 
-            HourBook
+				User Login
 
-        </div>
+			</p>
 
-
-        <div class="login-subtitle">
-
-            User Login
-
-        </div>
-
-    </div>
+		</div>
 
 
-    <!-- ================================================= -->
-    <!-- BODY -->
-    <!-- ================================================= -->
+		<!-- ================================================= -->
+		<!-- BODY -->
+		<!-- ================================================= -->
 
-    <div class="login-body">
-
-
-        <!-- ============================================= -->
-        <!-- Registration Success -->
-        <!-- ============================================= -->
-
-        <div th:if="${param.registered}"
-             class="alert alert-success">
-
-            <i class="bi bi-check-circle-fill me-2"></i>
-
-            Registration successful.
-            Please login to continue.
-
-        </div>
+		<div class="hb-auth__body">
 
 
-        <!-- ============================================= -->
-        <!-- Login Error -->
-        <!-- ============================================= -->
+			<!-- ============================================= -->
+			<!-- Registration Success -->
+			<!-- ============================================= -->
 
-        <div th:if="${error}"
-             class="alert alert-danger">
+			<div th:if="${param.registered}"
+				 class="alert alert-success"
+				 role="status">
 
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+				<i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
 
-            <span th:text="${error}">
+				Registration successful.
+				Please login to continue.
+
+			</div>
+
+
+			<!-- ============================================= -->
+			<!-- Login Error -->
+			<!-- ============================================= -->
+
+			<div th:if="${error}"
+				 class="alert alert-danger"
+				 role="alert">
+
+				<i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+
+				<span th:text="${error}">
                 Invalid login details.
             </span>
 
-        </div>
+			</div>
 
 
-        <!-- ============================================= -->
-        <!-- Login Form -->
-        <!-- ============================================= -->
+			<!-- ============================================= -->
+			<!-- Login Form -->
+			<!-- ============================================= -->
 
-		<form th:action="@{/user/login}"
-		      th:object="${loginRequest}"
-		      method="post">
+			<form th:action="@{/user/login}"
+				  th:object="${loginRequest}"
+				  method="post">
 
-		    <!-- Login ID -->
+				<!-- Login ID -->
 
-		    <div class="mb-3">
+				<div class="mb-3">
 
-		        <label class="form-label">
-		            Email or Phone Number
-		        </label>
+					<label class="form-label" for="loginId">
+						Email or Phone Number
+					</label>
 
-		        <div class="input-group">
+					<div class="input-group">
 
-		            <span class="input-group-text">
-		                <i class="bi bi-person"></i>
-		            </span>
+                    <span class="input-group-text" aria-hidden="true">
+                        <i class="bi bi-person"></i>
+                    </span>
 
-		            <input type="text"
-		                   th:field="*{loginId}"
-		                   class="form-control"
-		                   placeholder="Enter email or phone number"
-		                   autocomplete="username"
-		                   required>
+						<input type="text"
+							   th:field="*{loginId}"
+							   class="form-control"
+							   placeholder="Enter email or phone number"
+							   autocomplete="username"
+							   required>
 
-		        </div>
+					</div>
 
-		        <div class="text-danger small mt-1"
-		             th:if="${#fields.hasErrors('loginId')}"
-		             th:errors="*{loginId}">
-		        </div>
+					<div class="hb-field-error"
+						 th:if="${#fields.hasErrors('loginId')}"
+						 th:errors="*{loginId}">
+					</div>
 
-		    </div>
-
-
-		    <!-- Password -->
-
-		    <div class="mb-3">
-
-		        <label class="form-label">
-		            Password
-		        </label>
-
-		        <div class="input-group">
-
-		            <span class="input-group-text">
-		                <i class="bi bi-lock"></i>
-		            </span>
-
-		            <input type="password"
-		                   th:field="*{password}"
-		                   id="password"
-		                   class="form-control"
-		                   placeholder="Enter password"
-		                   autocomplete="current-password"
-		                   required>
-
-		            <button type="button"
-		                    class="btn btn-outline-secondary"
-		                    onclick="togglePassword()">
-
-		                <i class="bi bi-eye"
-		                   id="passwordIcon"></i>
-
-		            </button>
-
-		        </div>
-
-		        <div class="text-danger small mt-1"
-		             th:if="${#fields.hasErrors('password')}"
-		             th:errors="*{password}">
-		        </div>
-
-		    </div>
+				</div>
 
 
-		    <!-- General error -->
+				<!-- Password -->
 
-		    <div th:if="${error}"
-		         class="alert alert-danger">
+				<div class="mb-3">
 
-		        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+					<label class="form-label" for="password">
+						Password
+					</label>
 
-		        <span th:text="${error}">
-		            Invalid login details.
-		        </span>
+					<div class="input-group">
 
-		    </div>
+                    <span class="input-group-text" aria-hidden="true">
+                        <i class="bi bi-lock"></i>
+                    </span>
+
+						<input type="password"
+							   th:field="*{password}"
+							   id="password"
+							   class="form-control"
+							   placeholder="Enter password"
+							   autocomplete="current-password"
+							   required>
+
+						<button type="button"
+								class="btn btn-outline-secondary"
+								aria-label="Show or hide password"
+								onclick="togglePassword()">
+
+							<i class="bi bi-eye"
+							   id="passwordIcon"
+							   aria-hidden="true"></i>
+
+						</button>
+
+					</div>
+
+					<div class="hb-field-error"
+						 th:if="${#fields.hasErrors('password')}"
+						 th:errors="*{password}">
+					</div>
+
+				</div>
 
 
-		    <!-- Login button -->
+				<!-- General error -->
 
-		    <button type="submit"
-		            class="btn btn-primary w-100 login-button">
+				<div th:if="${error}"
+					 class="alert alert-danger"
+					 role="alert">
 
-		        <i class="bi bi-box-arrow-in-right me-2"></i>
+					<i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
 
-		        Login
+					<span th:text="${error}">
+                    Invalid login details.
+                </span>
 
-		    </button>
-
-		</form>
+				</div>
 
 
-        <!-- ============================================= -->
-        <!-- Divider -->
-        <!-- ============================================= -->
+				<!-- Login button -->
 
-        <div class="divider">
+				<button type="submit"
+						class="btn btn-primary btn-lg w-100">
+
+					<i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+
+					Login
+
+				</button>
+
+			</form>
+
+
+			<!-- ============================================= -->
+			<!-- Divider -->
+			<!-- ============================================= -->
+
+			<div class="hb-divider">
 
             <span>
                 OR
             </span>
 
-        </div>
+			</div>
 
 
-        <!-- ============================================= -->
-        <!-- Register -->
-        <!-- ============================================= -->
+			<!-- ============================================= -->
+			<!-- Register -->
+			<!-- ============================================= -->
 
-        <div class="text-center">
+			<div class="text-center">
 
             <span class="text-muted">
 
@@ -431,37 +244,39 @@
             </span>
 
 
-            <a th:href="@{/user/register}"
-               class="register-link ms-1">
+				<a th:href="@{/user/register}"
+				   class="fw-semibold ms-1">
 
-                Create Account
+					Create Account
 
-            </a>
+				</a>
 
-        </div>
-
-
-        <!-- ============================================= -->
-        <!-- Home -->
-        <!-- ============================================= -->
-
-        <div class="text-center mt-3">
-
-            <a th:href="@{/}"
-               class="text-muted text-decoration-none">
-
-                <i class="bi bi-arrow-left me-1"></i>
-
-                Back to Home
-
-            </a>
-
-        </div>
+			</div>
 
 
-    </div>
+			<!-- ============================================= -->
+			<!-- Home -->
+			<!-- ============================================= -->
 
-</div>
+			<div class="text-center mt-3">
+
+				<a th:href="@{/}"
+				   class="text-muted text-decoration-none">
+
+					<i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+
+					Back to Home
+
+				</a>
+
+			</div>
+
+
+		</div>
+
+	</div>
+
+</main>
 
 
 <!-- Bootstrap JS -->
@@ -472,34 +287,34 @@
 
 <script>
 
-    function togglePassword() {
+	function togglePassword() {
 
-        const password =
-            document.getElementById("password");
+		const password =
+				document.getElementById("password");
 
-        const icon =
-            document.getElementById("passwordIcon");
+		const icon =
+				document.getElementById("passwordIcon");
 
 
-        if (password.type === "password") {
+		if (password.type === "password") {
 
-            password.type = "text";
+			password.type = "text";
 
-            icon.classList.remove("bi-eye");
+			icon.classList.remove("bi-eye");
 
-            icon.classList.add("bi-eye-slash");
+			icon.classList.add("bi-eye-slash");
 
-        } else {
+		} else {
 
-            password.type = "password";
+			password.type = "password";
 
-            icon.classList.remove("bi-eye-slash");
+			icon.classList.remove("bi-eye-slash");
 
-            icon.classList.add("bi-eye");
+			icon.classList.add("bi-eye");
 
-        }
+		}
 
-    }
+	}
 
 </script>
 

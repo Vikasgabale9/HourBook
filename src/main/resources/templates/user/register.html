@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
@@ -10,6 +10,11 @@
 
     <title>User Registration | HourBook</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -18,421 +23,332 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
           rel="stylesheet">
 
-    <style>
-
-        body {
-            background: #f5f7fb;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 30px 20px;
-        }
-
-        .register-card {
-            width: 500px;
-            border: none;
-            border-radius: 18px;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
-        }
-
-        .register-header {
-            background: #2563eb;
-            color: white;
-            text-align: center;
-            padding: 30px 20px;
-        }
-
-        .logo-icon {
-            font-size: 48px;
-            margin-bottom: 5px;
-        }
-
-        .brand-name {
-            font-size: 30px;
-            font-weight: 700;
-        }
-
-        .register-subtitle {
-            opacity: .9;
-            margin-top: 4px;
-        }
-
-        .register-body {
-            padding: 32px;
-        }
-
-        .form-label {
-            font-weight: 600;
-        }
-
-        .form-control {
-            height: 48px;
-            border-radius: 10px;
-        }
-
-        .input-group-text {
-            background: white;
-            border-right: none;
-            border-radius: 10px 0 0 10px;
-        }
-
-        .input-group .form-control {
-            border-left: none;
-            border-radius: 0 10px 10px 0;
-        }
-
-        .register-button {
-            height: 48px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .login-link {
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .home-link {
-            text-decoration: none;
-        }
-
-        .profile-upload {
-            border: 1px dashed #ced4da;
-            border-radius: 10px;
-            padding: 15px;
-            background: #fafbfc;
-        }
-
-        .profile-preview {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            display: none;
-            margin: 10px auto;
-            border: 3px solid #e9ecef;
-        }
-
-    </style>
+    <!-- HourBook User Panel design system -->
+    <link th:href="@{/css/hourbook-user.css}"
+          rel="stylesheet">
 
 </head>
 
-<body>
+<body class="hb-body">
 
-<div class="card register-card">
+<main class="hb-auth">
 
-    <!-- Header -->
+    <div class="hb-auth__card hb-auth__card--wide">
 
-    <div class="register-header">
+        <!-- Header -->
 
-        <div class="logo-icon">
-            <i class="bi bi-calendar-check-fill"></i>
+        <div class="hb-auth__head">
+
+            <i class="bi bi-calendar-check-fill" aria-hidden="true"></i>
+
+            <h1 class="hb-auth__brand">
+                HourBook
+            </h1>
+
+            <p class="hb-auth__sub">
+                Create Your Account
+            </p>
+
         </div>
 
-        <div class="brand-name">
-            HourBook
-        </div>
 
-        <div class="register-subtitle">
-            Create Your Account
-        </div>
+        <!-- Body -->
 
-    </div>
+        <div class="hb-auth__body">
 
+            <!-- General Error -->
 
-    <!-- Body -->
+            <div th:if="${error}"
+                 class="alert alert-danger"
+                 role="alert">
 
-    <div class="register-body">
+                <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
 
-        <!-- General Error -->
-
-        <div th:if="${error}"
-             class="alert alert-danger">
-
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-
-            <span th:text="${error}">
+                <span th:text="${error}">
                 Unable to complete registration.
             </span>
 
-        </div>
+            </div>
 
 
-        <!-- Registration Form -->
+            <!-- Registration Form -->
 
-        <form th:action="@{/user/register}"
-              th:object="${userRegister}"
-              method="post"
-              enctype="multipart/form-data">
+            <form th:action="@{/user/register}"
+                  th:object="${userRegister}"
+                  method="post"
+                  enctype="multipart/form-data">
 
 
-            <!-- Full Name -->
+                <!-- Full Name -->
 
-            <div class="mb-3">
+                <div class="mb-3">
 
-                <label class="form-label">
-                    Full Name
-                </label>
+                    <label class="form-label" for="fullName">
+                        Full Name
+                    </label>
 
-                <div class="input-group">
+                    <div class="input-group">
 
-                    <span class="input-group-text">
+                    <span class="input-group-text" aria-hidden="true">
                         <i class="bi bi-person"></i>
                     </span>
 
-                    <input type="text"
-                           th:field="*{fullName}"
-                           class="form-control"
-                           placeholder="Enter your full name"
-                           autocomplete="name"
-                           required>
+                        <input type="text"
+                               th:field="*{fullName}"
+                               class="form-control"
+                               placeholder="Enter your full name"
+                               autocomplete="name"
+                               required>
+
+                    </div>
+
+                    <div class="hb-field-error"
+                         th:if="${#fields.hasErrors('fullName')}"
+                         th:errors="*{fullName}">
+                    </div>
 
                 </div>
 
-                <div class="text-danger small mt-1"
-                     th:if="${#fields.hasErrors('fullName')}"
-                     th:errors="*{fullName}">
-                </div>
 
-            </div>
+                <!-- Email -->
 
+                <div class="mb-3">
 
-            <!-- Email -->
+                    <label class="form-label" for="email">
+                        Email Address
+                    </label>
 
-            <div class="mb-3">
+                    <div class="input-group">
 
-                <label class="form-label">
-                    Email Address
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
+                    <span class="input-group-text" aria-hidden="true">
                         <i class="bi bi-envelope"></i>
                     </span>
 
-                    <input type="email"
-                           th:field="*{email}"
-                           class="form-control"
-                           placeholder="Enter your email"
-                           autocomplete="email"
-                           required>
+                        <input type="email"
+                               th:field="*{email}"
+                               class="form-control"
+                               placeholder="Enter your email"
+                               autocomplete="email"
+                               required>
+
+                    </div>
+
+                    <div class="hb-field-error"
+                         th:if="${#fields.hasErrors('email')}"
+                         th:errors="*{email}">
+                    </div>
 
                 </div>
 
-                <div class="text-danger small mt-1"
-                     th:if="${#fields.hasErrors('email')}"
-                     th:errors="*{email}">
-                </div>
 
-            </div>
+                <!-- Phone Number -->
 
+                <div class="mb-3">
 
-            <!-- Phone Number -->
+                    <label class="form-label" for="phoneNumber">
+                        Phone Number
+                    </label>
 
-            <div class="mb-3">
+                    <div class="input-group">
 
-                <label class="form-label">
-                    Phone Number
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
+                    <span class="input-group-text" aria-hidden="true">
                         <i class="bi bi-phone"></i>
                     </span>
 
-                    <input type="text"
-                           th:field="*{phoneNumber}"
-                           class="form-control"
-                           placeholder="Enter 10-digit phone number"
-                           maxlength="10"
-                           minlength="10"
-                           inputmode="numeric"
-                           autocomplete="tel"
-                           required>
+                        <input type="text"
+                               th:field="*{phoneNumber}"
+                               class="form-control"
+                               placeholder="Enter 10-digit phone number"
+                               maxlength="10"
+                               minlength="10"
+                               inputmode="numeric"
+                               autocomplete="tel"
+                               required>
 
-                </div>
-
-                <div class="text-danger small mt-1"
-                     th:if="${#fields.hasErrors('phoneNumber')}"
-                     th:errors="*{phoneNumber}">
-                </div>
-
-            </div>
-
-
-            <!-- Profile Image -->
-
-            <div class="mb-3">
-
-                <label class="form-label">
-                    Profile Image
-                </label>
-
-                <div class="profile-upload">
-
-                    <input type="file"
-                           th:field="*{profileImage}"
-                           id="profileImage"
-                           class="form-control"
-                           accept=".jpg,.jpeg,.png,image/jpeg,image/png">
-
-                    <div class="form-text mt-2">
-                        <i class="bi bi-info-circle me-1"></i>
-                        JPG, JPEG or PNG only. Maximum size: 5 MB.
                     </div>
 
-                    <img id="profilePreview"
-                         class="profile-preview"
-                         alt="Profile Preview">
+                    <div class="hb-field-error"
+                         th:if="${#fields.hasErrors('phoneNumber')}"
+                         th:errors="*{phoneNumber}">
+                    </div>
 
                 </div>
 
-                <div class="text-danger small mt-1"
-                     th:if="${#fields.hasErrors('profileImage')}"
-                     th:errors="*{profileImage}">
+
+                <!-- Profile Image -->
+
+                <div class="mb-3">
+
+                    <label class="form-label" for="profileImage">
+                        Profile Image
+                    </label>
+
+                    <div class="hb-upload">
+
+                        <input type="file"
+                               th:field="*{profileImage}"
+                               id="profileImage"
+                               class="form-control"
+                               aria-describedby="imageHelp"
+                               accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+
+                        <div id="imageHelp" class="form-text mt-2">
+                            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                            JPG, JPEG or PNG only. Maximum size: 5 MB.
+                        </div>
+
+                        <img id="profilePreview"
+                             class="hb-preview"
+                             alt="Profile Preview">
+
+                    </div>
+
+                    <div class="hb-field-error"
+                         th:if="${#fields.hasErrors('profileImage')}"
+                         th:errors="*{profileImage}">
+                    </div>
+
                 </div>
 
-            </div>
 
+                <!-- Password -->
 
-            <!-- Password -->
+                <div class="mb-3">
 
-            <div class="mb-3">
+                    <label class="form-label" for="password">
+                        Password
+                    </label>
 
-                <label class="form-label">
-                    Password
-                </label>
+                    <div class="input-group">
 
-                <div class="input-group">
-
-                    <span class="input-group-text">
+                    <span class="input-group-text" aria-hidden="true">
                         <i class="bi bi-lock"></i>
                     </span>
 
-                    <input type="password"
-                           th:field="*{password}"
-                           id="password"
-                           class="form-control"
-                           placeholder="Enter password"
-                           autocomplete="new-password"
-                           required>
+                        <input type="password"
+                               th:field="*{password}"
+                               id="password"
+                               class="form-control"
+                               placeholder="Enter password"
+                               autocomplete="new-password"
+                               required>
 
-                    <button type="button"
-                            class="btn btn-outline-secondary"
-                            onclick="togglePassword('password', 'passwordIcon')">
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                aria-label="Show or hide password"
+                                onclick="togglePassword('password', 'passwordIcon')">
 
-                        <i class="bi bi-eye"
-                           id="passwordIcon"></i>
+                            <i class="bi bi-eye"
+                               id="passwordIcon"
+                               aria-hidden="true"></i>
 
-                    </button>
+                        </button>
+
+                    </div>
+
+                    <div class="hb-field-error"
+                         th:if="${#fields.hasErrors('password')}"
+                         th:errors="*{password}">
+                    </div>
 
                 </div>
 
-                <div class="text-danger small mt-1"
-                     th:if="${#fields.hasErrors('password')}"
-                     th:errors="*{password}">
-                </div>
 
-            </div>
+                <!-- Confirm Password -->
 
+                <div class="mb-4">
 
-            <!-- Confirm Password -->
+                    <label class="form-label" for="confirmPassword">
+                        Confirm Password
+                    </label>
 
-            <div class="mb-4">
+                    <div class="input-group">
 
-                <label class="form-label">
-                    Confirm Password
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
+                    <span class="input-group-text" aria-hidden="true">
                         <i class="bi bi-lock-fill"></i>
                     </span>
 
-                    <input type="password"
-                           th:field="*{confirmPassword}"
-                           id="confirmPassword"
-                           class="form-control"
-                           placeholder="Confirm your password"
-                           autocomplete="new-password"
-                           required>
+                        <input type="password"
+                               th:field="*{confirmPassword}"
+                               id="confirmPassword"
+                               class="form-control"
+                               placeholder="Confirm your password"
+                               autocomplete="new-password"
+                               required>
 
-                    <button type="button"
-                            class="btn btn-outline-secondary"
-                            onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')">
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                aria-label="Show or hide confirm password"
+                                onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')">
 
-                        <i class="bi bi-eye"
-                           id="confirmPasswordIcon"></i>
+                            <i class="bi bi-eye"
+                               id="confirmPasswordIcon"
+                               aria-hidden="true"></i>
 
-                    </button>
+                        </button>
+
+                    </div>
+
+                    <div class="hb-field-error"
+                         th:if="${#fields.hasErrors('confirmPassword')}"
+                         th:errors="*{confirmPassword}">
+                    </div>
 
                 </div>
 
-                <div class="text-danger small mt-1"
-                     th:if="${#fields.hasErrors('confirmPassword')}"
-                     th:errors="*{confirmPassword}">
-                </div>
 
-            </div>
+                <!-- Register Button -->
 
+                <button type="submit"
+                        class="btn btn-primary btn-lg w-100">
 
-            <!-- Register Button -->
+                    <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
 
-            <button type="submit"
-                    class="btn btn-primary register-button w-100">
+                    Create Account
 
-                <i class="bi bi-person-plus-fill me-2"></i>
+                </button>
 
-                Create Account
-
-            </button>
-
-        </form>
+            </form>
 
 
-        <!-- Divider -->
+            <!-- Divider -->
 
-        <div class="text-center my-4">
+            <div class="text-center my-4">
 
             <span class="text-muted">
                 Already have an account?
             </span>
 
-            <a th:href="@{/user/login}"
-               class="login-link ms-1">
+                <a th:href="@{/user/login}"
+                   class="fw-semibold ms-1">
 
-                Login
+                    Login
 
-            </a>
+                </a>
 
-        </div>
+            </div>
 
 
-        <!-- Home -->
+            <!-- Home -->
 
-        <div class="text-center">
+            <div class="text-center">
 
-            <a th:href="@{/}"
-               class="text-muted home-link">
+                <a th:href="@{/}"
+                   class="text-muted text-decoration-none">
 
-                <i class="bi bi-arrow-left me-1"></i>
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
 
-                Back to Home
+                    Back to Home
 
-            </a>
+                </a>
+
+            </div>
 
         </div>
 
     </div>
 
-</div>
+</main>
 
 
 <!-- Bootstrap JS -->

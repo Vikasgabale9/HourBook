@@ -5,90 +5,141 @@
 
 <div th:fragment="sidebar">
 
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark"
-         style="width:250px;height:100vh;position:fixed;left:0;top:0;">
+    <a class="hb-skip" href="#main-content">Skip to main content</a>
 
-        <a href="/user/dashboard"
-           class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+    <!-- Fixed sidebar on desktop (lg+), slide-in drawer on phones and tablets -->
+    <aside id="hbSidebar"
+           class="hb-sidebar offcanvas-lg offcanvas-start"
+           tabindex="-1"
+           aria-labelledby="hbSidebarLabel">
 
-            <span class="fs-4 fw-bold">
-                HourBook
-            </span>
+        <div class="hb-sidebar__inner">
 
-        </a>
-
-        <hr>
-
-        <ul class="nav nav-pills flex-column mb-auto">
-
-            <li class="nav-item mb-2">
+            <div class="hb-sidebar__top">
 
                 <a th:href="@{/user/dashboard}"
-                   class="nav-link text-white">
+                   id="hbSidebarLabel"
+                   class="hb-brand">
 
-                    <i class="bi bi-speedometer2"></i>
+                    <!-- Logo: src/main/resources/static/images/logo.svg -->
+                    <img th:src="@{/images/logo.svg}"
+                         src="/images/logo.svg"
+                         alt=""
+                         width="36"
+                         height="36">
 
-                    Dashboard
-
-                </a>
-
-            </li>
-
-            <li class="mb-2">
-
-                <a th:href="@{/user/grounds}"
-                   class="nav-link text-white">
-
-                    <i class="bi bi-building"></i>
-
-                    Browse Grounds
+                    HourBook
 
                 </a>
 
-            </li>
+                <button type="button"
+                        class="btn-close btn-close-white d-lg-none"
+                        data-bs-dismiss="offcanvas"
+                        data-bs-target="#hbSidebar"
+                        aria-label="Close navigation">
+                </button>
 
-            <li class="mb-2">
+            </div>
 
-                <a th:href="@{/user/bookings}"
-                   class="nav-link text-white">
+            <nav aria-label="User navigation" class="d-flex flex-column flex-grow-1">
 
-                    <i class="bi bi-calendar-check"></i>
+                <ul class="hb-nav">
 
-                    My Bookings
+                    <li>
+                        <a th:href="@{/user/dashboard}"
+                           data-hb-nav="/user/dashboard">
 
-                </a>
+                            <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                            Dashboard
 
-            </li>
+                        </a>
+                    </li>
 
-            <li class="mb-2">
+                    <li>
+                        <a th:href="@{/user/grounds}"
+                           data-hb-nav="/user/grounds">
 
-                <a th:href="@{/user/profile}"
-                   class="nav-link text-white">
+                            <i class="bi bi-building" aria-hidden="true"></i>
+                            Browse Grounds
 
-                    <i class="bi bi-person-circle"></i>
+                        </a>
+                    </li>
 
-                    My Profile
+                    <li>
+                        <a th:href="@{/user/bookings}"
+                           data-hb-nav="/user/bookings">
 
-                </a>
+                            <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                            My Bookings
 
-            </li>
+                        </a>
+                    </li>
 
-            <li class="mb-2">
+                    <li>
+                        <a th:href="@{/user/profile}"
+                           data-hb-nav="/user/profile">
 
-                <a th:href="@{/user/logout}"
-                   class="nav-link text-danger">
+                            <i class="bi bi-person-circle" aria-hidden="true"></i>
+                            My Profile
 
-                    <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </li>
 
-                    Logout
+                    <li class="hb-nav__logout">
+                        <a th:href="@{/user/logout}">
 
-                </a>
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            Logout
 
-            </li>
+                        </a>
+                    </li>
 
-        </ul>
+                </ul>
 
-    </div>
+            </nav>
+
+        </div>
+
+    </aside>
+
+    <!-- Marks the current section in the navigation -->
+    <script>
+        (function () {
+
+            var path = window.location.pathname.replace(/\/+$/, "");
+            var start = path.indexOf("/user/");
+
+            if (start > -1) {
+                path = path.substring(start);
+            }
+
+            // Order matters: the slot-booking page belongs to "Browse Grounds"
+            var rules = [
+                ["/user/bookings/ground", "/user/grounds"],
+                ["/user/bookings", "/user/bookings"],
+                ["/user/grounds", "/user/grounds"],
+                ["/user/profile", "/user/profile"],
+                ["/user/dashboard", "/user/dashboard"]
+            ];
+
+            var target = null;
+
+            for (var i = 0; i < rules.length; i++) {
+                if (path === rules[i][0] || path.indexOf(rules[i][0] + "/") === 0) {
+                    target = rules[i][1];
+                    break;
+                }
+            }
+
+            document.querySelectorAll("#hbSidebar [data-hb-nav]").forEach(function (link) {
+                if (link.getAttribute("data-hb-nav") === target) {
+                    link.classList.add("active");
+                    link.setAttribute("aria-current", "page");
+                }
+            });
+
+        })();
+    </script>
 
 </div>
 

@@ -4,6 +4,60 @@
 <head>
     <title>Users Management</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
+    <style>
+        /* ============================================================
+           Profile avatar — self-contained for this page.
+           If you would rather keep all styling in admin.css, move
+           these rules there and delete this <style> block.
+           ============================================================ */
+
+        .profile-cell{
+            width:64px;
+            text-align:center;
+        }
+
+        .profile-avatar-wrap{
+            position:relative;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:42px;
+            height:42px;
+            border-radius:50%;
+            background:#eef2ff;
+            overflow:hidden;
+            vertical-align:middle;
+            box-shadow:0 0 0 2px #fff, 0 0 0 3px #e2e8f0;
+            transition:box-shadow .16s ease;
+        }
+
+        tr:hover .profile-avatar-wrap{
+            box-shadow:0 0 0 2px #fff, 0 0 0 3px #2563eb;
+        }
+
+        .profile-avatar-wrap .profile-avatar{
+            position:absolute;
+            inset:0;
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:50%;
+            display:block;
+            z-index:1;
+        }
+
+        .profile-avatar-fallback{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:20px;
+            line-height:1;
+            color:#1e3a8a;
+            user-select:none;
+            z-index:0;
+        }
+    </style>
 </head>
 
 <body>
@@ -16,129 +70,146 @@
     <h2>Users Management</h2>
 
     <form th:action="@{/admin/users}" method="get" class="search-box">
-        <input type="text" name="search" th:value="${search}" placeholder="Search by name, phone or email">
+        <input type="text"
+               name="search"
+               th:value="${search}"
+               placeholder="Search by name, phone or email">
         <button type="submit">Search</button>
     </form>
 
     <!-- Empty State -->
     <div th:if="${#lists.isEmpty(users)}"
-         class="table-container"
-         style="text-align:center;padding:60px 20px;color:#94a3b8;">
-        <p style="font-size:18px;font-weight:600;">No users found.</p>
+         class="table-container empty-state">
+        <p class="empty-title">No users found.</p>
+        <p class="empty-sub">Try a different search term.</p>
     </div>
 
     <div class="table-container" th:unless="${#lists.isEmpty(users)}">
 
-        <table>
-            <thead>
-            <tr>
-                <th>S.No</th>
-                <th>ID</th>
-                <th>Full Name</th>
-                <th>Phone Number</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Mobile Verified</th>
-                <th>Email Verified</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-            </thead>
+        <div class="table-scroll">
+            <table class="users-table">
+                <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Profile</th>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Mobile Verified</th>
+                    <th>Email Verified</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
 
-            <tbody>
+                <tbody>
 
-            <tr th:each="user, stat : ${users}">
+                <tr th:each="user, stat : ${users}">
 
-                <!-- Pagination Serial Number -->
-                <td th:text="${userPage.number * userPage.size + stat.count}"></td>
+                    <!-- Pagination Serial Number -->
+                    <td th:text="${userPage.number * userPage.size + stat.count}"></td>
 
-                <td th:text="${user.id}"></td>
-                <td th:text="${user.fullName}"></td>
-                <td th:text="${user.phoneNumber}"></td>
-                <td th:text="${user.email}"></td>
-                <td th:text="${user.appUser.role}"></td>
+                    <td class="profile-cell">
+                        <span class="profile-avatar-wrap">
+                            <span class="profile-avatar-fallback" aria-hidden="true">👤</span>
+                            <img th:if="${user.profileImage != null and !user.profileImage.isEmpty()}"
+                                 th:src="${user.profileImage}"
+                                 alt="Profile image"
+                                 class="profile-avatar"
+                                 loading="lazy"
+                                 onerror="this.style.display='none';">
+                        </span>
+                    </td>
 
-                <td>
-                    <span th:if="${user.appUser.isVerified}" class="status-active">
-                        Verified
-                    </span>
+                    <td th:text="${user.id}"></td>
+                    <td class="wrap-cell" th:text="${user.fullName}"></td>
+                    <td th:text="${user.phoneNumber}"></td>
+                    <td class="wrap-cell" th:text="${user.email}"></td>
+                    <td th:text="${user.appUser.role}"></td>
 
-                    <span th:unless="${user.appUser.isVerified}" class="status-inactive">
-                        Not Verified
-                    </span>
-                </td>
+                    <td>
+                        <span th:if="${user.appUser.isVerified}" class="status-active">
+                            Verified
+                        </span>
+                        <span th:unless="${user.appUser.isVerified}" class="status-inactive">
+                            Not Verified
+                        </span>
+                    </td>
 
-                <td>
-                    <span th:if="${user.emailVerified}" class="status-active">
-                        Verified
-                    </span>
+                    <td>
+                        <span th:if="${user.emailVerified}" class="status-active">
+                            Verified
+                        </span>
+                        <span th:unless="${user.emailVerified}" class="status-inactive">
+                            Not Verified
+                        </span>
+                    </td>
 
-                    <span th:unless="${user.emailVerified}" class="status-inactive">
-                        Not Verified
-                    </span>
-                </td>
+                    <td>
+                        <span th:if="${user.isActive}" class="status-active">
+                            Active
+                        </span>
+                        <span th:unless="${user.isActive}" class="status-inactive">
+                            Inactive
+                        </span>
+                    </td>
 
-                <td>
-                    <span th:if="${user.isActive}" class="status-active">
-                        Active
-                    </span>
+                    <td>
+                        <form class="status-form"
+                              th:action="@{'/admin/users/status/' + ${user.id}}"
+                              method="post">
 
-                    <span th:unless="${user.isActive}" class="status-inactive">
-                        Inactive
-                    </span>
-                </td>
+                            <button
+                                    th:if="${user.isActive}"
+                                    class="btn-danger"
+                                    type="submit"
+                                    onclick="return confirm('Deactivate this user?')">
 
-                <td>
-                    <form th:action="@{'/admin/users/status/' + ${user.id}}" method="post">
+                                Deactivate
 
-                        <button
-                                th:if="${user.isActive}"
-                                class="btn-danger"
-                                type="submit"
-                                onclick="return confirm('Deactivate this user?')">
+                            </button>
 
-                            Deactivate
+                            <button
+                                    th:unless="${user.isActive}"
+                                    class="btn-success"
+                                    type="submit"
+                                    onclick="return confirm('Activate this user?')">
 
-                        </button>
+                                Activate
 
-                        <button
-                                th:unless="${user.isActive}"
-                                class="btn-success"
-                                type="submit"
-                                onclick="return confirm('Activate this user?')">
+                            </button>
 
-                            Activate
+                        </form>
+                    </td>
 
-                        </button>
+                </tr>
 
-                    </form>
-                </td>
-
-            </tr>
-
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Pagination bar -->
-        <div class="pagination-bar"
-             style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div class="pagination-bar">
 
             <!-- Page size selector -->
-            <div class="page-size-selector" style="display:flex;align-items:center;gap:8px;">
-                <label for="pageSize" style="color:#64748b;font-size:14px;">Show</label>
-                <select id="pageSize" th:data-base-url="@{/admin/users}" th:data-search="${search}" onchange="changePageSize(this)">
+            <div class="page-size-selector">
+                <label for="pageSize">Show</label>
+                <select id="pageSize"
+                        th:data-base-url="@{/admin/users}"
+                        th:data-search="${search}"
+                        onchange="changePageSize(this)">
                     <option value="10" th:selected="${userPage.size == 10}">10</option>
                     <option value="20" th:selected="${userPage.size == 20}">20</option>
                     <option value="50" th:selected="${userPage.size == 50}">50</option>
                     <option value="100" th:selected="${userPage.size == 100}">100</option>
                 </select>
-                <span style="color:#64748b;font-size:14px;">entries</span>
+                <span>entries</span>
             </div>
 
             <!-- Page numbers -->
-            <div class="pagination"
-                 th:if="${userPage.totalPages > 1}"
-                 style="display:flex;align-items:center;gap:6px;">
+            <div class="pagination" th:if="${userPage.totalPages > 1}">
 
                 <a th:if="${!userPage.first}"
                    th:href="@{/admin/users(page=${userPage.number-1},size=${userPage.size},search=${search})}"

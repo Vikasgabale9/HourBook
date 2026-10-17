@@ -1,9 +1,15 @@
 <div th:fragment="sidebar">
 
-    <div class="sidebar">
+    <div class="sidebar" id="appSidebar" aria-label="Admin navigation">
 
-        <div class="logo">
-            HourBook
+        <div class="sidebar-header">
+            <div class="logo">HourBook</div>
+            <button type="button"
+                    class="sidebar-close"
+                    id="sidebarClose"
+                    aria-label="Close navigation menu">
+                <span aria-hidden="true">&times;</span>
+            </button>
         </div>
 
         <ul>

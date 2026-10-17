@@ -4,6 +4,7 @@
 <head>
     <title>Ground Management</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
 </head>
 
 <body>
@@ -13,7 +14,7 @@
 
 <div class="content">
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div class="page-header">
         <h2>Ground Management</h2>
         <a th:href="@{/admin/grounds/add}" class="add-btn">+ Add Ground</a>
     </div>
@@ -48,10 +49,9 @@
     </div>
 
     <!-- Empty State -->
-    <div th:if="${#lists.isEmpty(grounds)}"
-         style="text-align:center;padding:60px 20px;color:#94a3b8;">
-        <p style="font-size:18px;font-weight:600;">No grounds found.</p>
-        <p style="margin-top:8px;">Try a different filter or add a new ground.</p>
+    <div th:if="${#lists.isEmpty(grounds)}" class="empty-state">
+        <p class="empty-title">No grounds found.</p>
+        <p class="empty-sub">Try a different filter or add a new ground.</p>
     </div>
 
     <!-- Grounds Grid -->
@@ -67,12 +67,23 @@
                      class="ground-cover"
                      alt="Ground cover image">
 
-                <img th:unless="${ground.imageUrls != null && !#lists.isEmpty(ground.imageUrls)}"
-                     src="/images/no-image.png"
-                     class="ground-cover"
-                     alt="No image available">
+                <!-- Inline SVG placeholder used when the ground has no image.
+                     Replaces the previously referenced /images/no-image.png. -->
+                <div th:unless="${ground.imageUrls != null && !#lists.isEmpty(ground.imageUrls)}"
+                     class="no-image-placeholder"
+                     role="img"
+                     aria-label="No image available">
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="6" y="14" width="52" height="36" rx="4"
+                              fill="none" stroke="currentColor" stroke-width="3"/>
+                        <circle cx="22" cy="28" r="5"
+                                fill="none" stroke="currentColor" stroke-width="3"/>
+                        <path d="M10 46 L26 32 L38 42 L48 34 L56 44"
+                              fill="none" stroke="currentColor" stroke-width="3"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
 
-                <!-- Color-coded status badge — FIX: th:classappend added -->
                 <span class="status-badge"
                       th:classappend="${ground.status.name()=='APPROVED'} ? 'badge-approved'
                                     : (${ground.status.name()=='REJECTED'} ? 'badge-rejected' : 'badge-pending')"
@@ -80,7 +91,6 @@
                 </span>
 
             </div>
-			
 
             <!-- Ground Details -->
             <div class="ground-body">
@@ -88,7 +98,8 @@
                 <h3 th:text="${ground.name}"></h3>
 
                 <p>📍 <span th:text="${ground.location}"></span></p>
-               <p>👤 <span th:text="${ground.vendor.phoneNumber}"></span></p>
+                <p>👤 <span th:text="${ground.vendor.phoneNumber}"></span></p>
+
                 <div class="ground-info">
                     <span th:text="${ground.sports}"></span>
                     <span th:text="${ground.type}"></span>
@@ -150,112 +161,100 @@
 
             </div>
 
-			
         </div>
 
-		
     </div>
 
+    <!-- Pagination bar -->
+    <div class="pagination-bar" th:unless="${#lists.isEmpty(grounds)}">
 
-	<!-- Pagination bar -->
-	<div class="pagination-bar"
-	     th:unless="${#lists.isEmpty(grounds)}"
-	     style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div class="page-size-selector">
+            <label for="pageSize">Show</label>
+            <select id="pageSize"
+                    th:data-base-url="@{/admin/grounds}"
+                    th:data-status="${status}"
+                    onchange="changePageSize(this)">
+                <option value="10" th:selected="${groundPage.size == 10}">10</option>
+                <option value="20" th:selected="${groundPage.size == 20}">20</option>
+                <option value="50" th:selected="${groundPage.size == 50}">50</option>
+                <option value="100" th:selected="${groundPage.size == 100}">100</option>
+            </select>
+            <span>entries</span>
+        </div>
 
-		<!-- Page size selector -->
-		<div class="page-size-selector" style="display:flex;align-items:center;gap:8px;">
-			<label for="pageSize" style="color:#64748b;font-size:14px;">Show</label>
-			<select id="pageSize"
-			        th:data-base-url="@{/admin/grounds}"
-			        th:data-status="${status}"
-			        onchange="changePageSize(this)">
-				<option value="10" th:selected="${groundPage.size == 10}">10</option>
-				<option value="20" th:selected="${groundPage.size == 20}">20</option>
-				<option value="50" th:selected="${groundPage.size == 50}">50</option>
-				<option value="100" th:selected="${groundPage.size == 100}">100</option>
-			</select>
-			<span style="color:#64748b;font-size:14px;">entries</span>
-		</div>
+        <div class="pagination" th:if="${groundPage.totalPages > 1}">
 
-		<!-- Page numbers -->
-		<div class="pagination"
-		     th:if="${groundPage.totalPages > 1}"
-		     style="display:flex;align-items:center;gap:6px;">
+            <a th:if="${!groundPage.first}"
+               th:href="@{/admin/grounds(page=${groundPage.number-1},size=${groundPage.size},status=${status},search=${search})}"
+               class="btn-secondary">
+                &laquo; Previous
+            </a>
+            <span th:if="${groundPage.first}" class="btn-secondary disabled">&laquo; Previous</span>
 
-			<a th:if="${!groundPage.first}"
-			   th:href="@{/admin/grounds(page=${groundPage.number-1},size=${groundPage.size},status=${status},search=${search})}"
-			   class="btn-secondary">
-				&laquo; Previous
-			</a>
-			<span th:if="${groundPage.first}" class="btn-secondary disabled">&laquo; Previous</span>
+            <a th:if="${startPage > 0}"
+               th:href="@{/admin/grounds(page=0,size=${groundPage.size},status=${status},search=${search})}"
+               class="page-link">1</a>
+            <span th:if="${startPage > 1}" class="page-ellipsis">...</span>
 
-			<!-- First page + leading ellipsis -->
-			<a th:if="${startPage > 0}"
-			   th:href="@{/admin/grounds(page=0,size=${groundPage.size},status=${status},search=${search})}"
-			   class="page-link">1</a>
-			<span th:if="${startPage > 1}" class="page-ellipsis">...</span>
+            <span th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                <a th:if="${i != groundPage.number}"
+                   th:href="@{/admin/grounds(page=${i},size=${groundPage.size},status=${status},search=${search})}"
+                   class="page-link"
+                   th:text="${i + 1}"></a>
+                <span th:if="${i == groundPage.number}"
+                      class="page-link active-page"
+                      th:text="${i + 1}"></span>
+            </span>
 
-			<!-- Page window -->
-			<span th:each="i : ${#numbers.sequence(startPage, endPage)}">
-				<a th:if="${i != groundPage.number}"
-				   th:href="@{/admin/grounds(page=${i},size=${groundPage.size},status=${status},search=${search})}"
-				   class="page-link"
-				   th:text="${i + 1}"></a>
-				<span th:if="${i == groundPage.number}"
-				      class="page-link active-page"
-				      th:text="${i + 1}"></span>
-			</span>
+            <span th:if="${endPage < groundPage.totalPages - 2}" class="page-ellipsis">...</span>
+            <a th:if="${endPage < groundPage.totalPages - 1}"
+               th:href="@{/admin/grounds(page=${groundPage.totalPages - 1},size=${groundPage.size},status=${status},search=${search})}"
+               class="page-link"
+               th:text="${groundPage.totalPages}"></a>
 
-			<!-- Trailing ellipsis + last page -->
-			<span th:if="${endPage < groundPage.totalPages - 2}" class="page-ellipsis">...</span>
-			<a th:if="${endPage < groundPage.totalPages - 1}"
-			   th:href="@{/admin/grounds(page=${groundPage.totalPages - 1},size=${groundPage.size},status=${status},search=${search})}"
-			   class="page-link"
-			   th:text="${groundPage.totalPages}"></a>
+            <a th:if="${!groundPage.last}"
+               th:href="@{/admin/grounds(page=${groundPage.number+1},size=${groundPage.size},status=${status},search=${search})}"
+               class="btn-secondary">
+                Next &raquo;
+            </a>
+            <span th:if="${groundPage.last}" class="btn-secondary disabled">Next &raquo;</span>
 
-			<a th:if="${!groundPage.last}"
-			   th:href="@{/admin/grounds(page=${groundPage.number+1},size=${groundPage.size},status=${status},search=${search})}"
-			   class="btn-secondary">
-				Next &raquo;
-			</a>
-			<span th:if="${groundPage.last}" class="btn-secondary disabled">Next &raquo;</span>
+        </div>
 
-		</div>
+        <div style="color:#64748b;font-size:14px;">
+            Page <strong th:text="${groundPage.number + 1}"></strong>
+            of <strong th:text="${groundPage.totalPages}"></strong>
+            (<span th:text="${groundPage.totalElements}"></span> total)
+        </div>
 
-		<div style="color:#64748b;font-size:14px;">
-			Page <strong th:text="${groundPage.number + 1}"></strong>
-			of <strong th:text="${groundPage.totalPages}"></strong>
-			(<span th:text="${groundPage.totalElements}"></span> total)
-		</div>
-
-	</div>
+    </div>
 </div>
 
 <div th:replace="~{admin/fragments/footer :: footer}"></div>
 
 <script>
 
-	function changePageSize(select) {
+    function changePageSize(select) {
 
-		const baseUrl = select.dataset.baseUrl;
-		const status = select.dataset.status;
-		const newSize = select.value;
+        const baseUrl = select.dataset.baseUrl;
+        const status = select.dataset.status;
+        const newSize = select.value;
 
-		const params = new URLSearchParams(window.location.search);
-		const search = params.get("search");
+        const params = new URLSearchParams(window.location.search);
+        const search = params.get("search");
 
-		let url = baseUrl + "?page=0&size=" + newSize;
+        let url = baseUrl + "?page=0&size=" + newSize;
 
-		if (status) {
-			url += "&status=" + encodeURIComponent(status);
-		}
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
+        }
 
-		if (search && search.trim() !== "") {
-			url += "&search=" + encodeURIComponent(search);
-		}
+        if (search && search.trim() !== "") {
+            url += "&search=" + encodeURIComponent(search);
+        }
 
-		window.location.href = url;
-	}
+        window.location.href = url;
+    }
 
 </script>
 

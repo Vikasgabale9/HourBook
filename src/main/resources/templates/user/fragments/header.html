@@ -5,49 +5,89 @@
 
 <div th:fragment="header">
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <header class="hb-topbar">
 
-        <div class="container-fluid">
+        <div class="hb-topbar__inner">
 
-            <span class="navbar-brand fw-bold">
+            <!-- Opens the navigation drawer on phones and tablets -->
+            <button type="button"
+                    class="hb-topbar__toggle d-lg-none"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#hbSidebar"
+                    aria-controls="hbSidebar"
+                    aria-label="Open navigation menu">
+
+                <i class="bi bi-list" aria-hidden="true"></i>
+
+            </button>
+
+            <p class="hb-topbar__title d-lg-none">
+                HourBook
+            </p>
+
+            <p class="hb-topbar__title d-none d-lg-block">
                 User Panel
-            </span>
+            </p>
 
-            <div class="ms-auto d-flex align-items-center">
+            <div class="hb-topbar__user">
 
-                <span class="me-3">
+                <span class="hb-topbar__welcome d-none d-sm-inline">
                     Welcome,
                     <strong th:text="${session.userName}">
                     </strong>
                 </span>
 
 
-                <!-- Profile Image -->
+                <a th:href="@{/user/profile}"
+                   class="hb-avatar-link"
+                   aria-label="Go to my profile">
 
-                <img th:if="${session.profileImage != null and !session.profileImage.isEmpty()}"
-                     th:src="@{${session.profileImage}}"
-                     alt="User Profile"
-                     class="rounded-circle border"
-                     width="45"
-                     height="45"
-                     style="object-fit: cover;">
+                    <!-- Profile Image -->
+
+                    <img th:if="${session.profileImage != null and !session.profileImage.isEmpty()}"
+                         th:src="@{${session.profileImage}}"
+                         alt="User Profile"
+                         class="hb-avatar"
+                         width="44"
+                         height="44">
 
 
-                <!-- Default Profile Image -->
+                    <!-- Default Profile Image -->
 
-                <img th:unless="${session.profileImage != null and !session.profileImage.isEmpty()}"
-                     src="https://placehold.co/45x45"
-                     alt="Default Profile"
-                     class="rounded-circle border"
-                     width="45"
-                     height="45"
-                     style="object-fit: cover;">
+                    <img th:unless="${session.profileImage != null and !session.profileImage.isEmpty()}"
+                         src="https://placehold.co/45x45"
+                         alt="Default Profile"
+                         class="hb-avatar"
+                         width="44"
+                         height="44">
+
+                </a>
 
             </div>
 
         </div>
 
-    </nav>
+    </header>
+
+    <!-- Browser-tab icon: src/main/resources/static/images/logo.svg -->
+    <script th:inline="javascript">
+        (function () {
+
+            var iconUrl = /*[[@{/images/logo.svg}]]*/ "/images/logo.svg";
+
+            var link = document.querySelector('link[rel~="icon"]');
+
+            if (!link) {
+                link = document.createElement("link");
+                link.rel = "icon";
+                document.head.appendChild(link);
+            }
+
+            link.type = "image/svg+xml";
+            link.href = iconUrl;
+
+        })();
+    </script>
 
 </div>
 

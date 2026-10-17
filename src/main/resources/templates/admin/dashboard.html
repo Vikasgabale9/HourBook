@@ -1,77 +1,1217 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <title>Dashboard</title>
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0F172A">
+    <title>Dashboard | HourBook Admin</title>
+
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo.svg}" href="/images/logo.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
+    <!--
+        This page is self-contained: all styles below are scoped to body.hb-dark,
+        so the other admin pages that use admin.css are not affected.
+    -->
+    <style>
+        :root {
+            --bg: #0F172A;
+            --blue: #3B82F6;
+            --blue-l: #60A5FA;
+            --violet: #8B5CF6;
+            --violet-l: #A78BFA;
+            --amber: #F59E0B;
+            --amber-l: #FBBF24;
+            --green: #10B981;
+            --green-l: #34D399;
+            --red: #EF4444;
+            --red-l: #F87171;
+            --text: #E2E8F0;
+            --muted: #A3B1C6;
+            --line: rgba(255, 255, 255, .11);
+            --side-w: 260px;
+            --top-h: 64px;
+            --ease: .22s cubic-bezier(.2, .7, .2, 1)
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%
+        }
+
+        .hb-dark {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text);
+            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.55;
+            background:
+                    radial-gradient(50% 40% at 85% -5%, rgba(139, 92, 246, .28), transparent 70%),
+                    radial-gradient(45% 40% at 0% 100%, rgba(59, 130, 246, .22), transparent 70%),
+                    var(--bg);
+            background-attachment: fixed;
+            overflow-x: hidden
+        }
+
+        .hb-dark.hb-nav-open {
+            overflow: hidden
+        }
+
+        .hb-dark a {
+            color: inherit
+        }
+
+        .hb-dark :focus-visible {
+            outline: 3px solid var(--blue-l);
+            outline-offset: 2px
+        }
+
+        .hb-dark [hidden] {
+            display: none !important
+        }
+
+        /* ================= SIDEBAR (fragment markup, restyled) ================= */
+        .hb-dark .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 60;
+            width: var(--side-w);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, .88);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--line);
+            transition: transform .28s cubic-bezier(.2, .7, .2, 1), box-shadow .28s
+        }
+
+        .hb-dark .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            padding: 1.1rem 1rem;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .hb-dark .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: .65rem;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            color: #fff
+        }
+
+        .hb-dark .logo::before {
+            content: "";
+            width: 34px;
+            height: 34px;
+            flex: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--blue), var(--violet));
+            box-shadow: 0 0 20px rgba(139, 92, 246, .55)
+        }
+
+        .hb-dark .sidebar-close {
+            display: none;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text);
+            font-size: 1.8rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: background-color var(--ease), transform var(--ease)
+        }
+
+        .hb-dark .sidebar-close:hover {
+            background: rgba(255, 255, 255, .1);
+            transform: scale(1.08)
+        }
+
+        .hb-dark .sidebar ul {
+            list-style: none;
+            margin: 0;
+            padding: .85rem .75rem;
+            display: grid;
+            gap: .25rem
+        }
+
+        .hb-dark .sidebar li a {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            min-height: 46px;
+            padding: 0 .9rem;
+            border-left: 3px solid transparent;
+            border-radius: 12px;
+            color: #CBD5E1;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background-color var(--ease), border-color var(--ease), color var(--ease), box-shadow var(--ease)
+        }
+
+        .hb-dark .sidebar li a:hover,
+        .hb-dark .sidebar li a:focus-visible {
+            color: #fff;
+            background-color: rgba(59, 130, 246, .16);
+            border-left-color: var(--blue);
+            box-shadow: inset 6px 0 14px -8px var(--blue), 0 0 22px -10px var(--blue)
+        }
+
+        .hb-dark .sidebar li a.active {
+            color: #fff;
+            font-weight: 700;
+            background-color: rgba(139, 92, 246, .2);
+            border-left-color: var(--violet);
+            box-shadow: inset 6px 0 14px -8px var(--violet), 0 0 22px -10px var(--violet)
+        }
+
+        .hb-dark .sidebar li:last-child a {
+            color: #FCA5A5
+        }
+
+        .hb-dark .sidebar li:last-child a:hover {
+            background-color: rgba(239, 68, 68, .16);
+            border-left-color: var(--red);
+            box-shadow: inset 6px 0 14px -8px var(--red)
+        }
+
+        /* ================= TOP BAR ================= */
+        .hb-dark .topbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--side-w);
+            z-index: 40;
+            height: var(--top-h);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: 0 1.5rem;
+            background: rgba(15, 23, 42, .72);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line)
+        }
+
+        .hb-dark .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-width: 0
+        }
+
+        .hb-dark .topbar h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .hb-dark .topbar-user {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .4rem .85rem;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .06);
+            font-size: .85rem;
+            font-weight: 600
+        }
+
+        .hb-dark .topbar-user::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, .25)
+        }
+
+        .hb-dark .menu-btn {
+            display: none;
+            flex: none;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .06);
+            cursor: pointer;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background-color var(--ease), transform var(--ease)
+        }
+
+        .hb-dark .menu-btn:hover {
+            background: rgba(59, 130, 246, .22);
+            transform: scale(1.06)
+        }
+
+        .hb-dark .menu-btn span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            border-radius: 2px;
+            background: #fff;
+            transition: transform var(--ease), opacity var(--ease)
+        }
+
+        .hb-dark .menu-btn[aria-expanded="true"] span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg)
+        }
+
+        .hb-dark .menu-btn[aria-expanded="true"] span:nth-child(2) {
+            opacity: 0
+        }
+
+        .hb-dark .menu-btn[aria-expanded="true"] span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg)
+        }
+
+        .hb-dark .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: rgba(2, 6, 23, .65);
+            -webkit-backdrop-filter: blur(3px);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            transition: opacity .24s ease
+        }
+
+        .hb-dark .sidebar-overlay.show {
+            opacity: 1
+        }
+
+        /* ---- Mobile / tablet: sidebar becomes a slide-in overlay ---- */
+        @media (max-width:1023.98px) {
+            .hb-dark .sidebar {
+                width: min(86vw, 300px);
+                transform: translateX(-104%)
+            }
+
+            .hb-dark .sidebar.open {
+                transform: none;
+                box-shadow: 0 0 60px rgba(0, 0, 0, .6)
+            }
+
+            .hb-dark .sidebar-close,
+            .hb-dark .menu-btn {
+                display: inline-flex
+            }
+
+            .hb-dark .topbar {
+                left: 0;
+                padding: 0 1rem
+            }
+        }
+
+        @media (max-width:419.98px) {
+            .hb-dark .topbar-user {
+                display: none
+            }
+        }
+
+        /* ================= CONTENT ================= */
+        .hb-dark .content {
+            flex: 1 0 auto;
+            min-width: 0;
+            margin-left: var(--side-w);
+            padding: calc(var(--top-h) + 1.5rem) 1rem 2rem
+        }
+
+        .hb-dark .footer {
+            margin-left: var(--side-w);
+            padding: 1.25rem 1rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: .85rem;
+            border-top: 1px solid var(--line)
+        }
+
+        @media (min-width:768px) {
+            .hb-dark .content {
+                padding-inline: 1.5rem
+            }
+        }
+
+        @media (min-width:1280px) {
+            .hb-dark .content {
+                padding-inline: 2rem
+            }
+        }
+
+        @media (max-width:1023.98px) {
+
+            .hb-dark .content,
+            .hb-dark .footer {
+                margin-left: 0
+            }
+        }
+
+        .dash {
+            max-width: 1280px;
+            margin-inline: auto;
+            display: grid;
+            gap: 1.25rem
+        }
+
+        .page-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: .75rem 1rem
+        }
+
+        .page-head h1 {
+            margin: 0;
+            font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.15rem);
+            font-weight: 800;
+            letter-spacing: -.03em;
+            color: #fff
+        }
+
+        .page-head p {
+            margin: .2rem 0 0;
+            color: var(--muted)
+        }
+
+        /* ---------- Buttons ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 44px;
+            padding: 0 1.1rem;
+            border: 1.5px solid transparent;
+            border-radius: 12px;
+            font: inherit;
+            font-size: .92rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform var(--ease), box-shadow var(--ease), background-color var(--ease), border-color var(--ease)
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: #fff;
+            box-shadow: 0 6px 22px -6px rgba(59, 130, 246, .8)
+        }
+
+        .btn-ghost {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, .28);
+            background: rgba(255, 255, 255, .05)
+        }
+
+        .btn:hover {
+            transform: scale(1.05)
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 10px 30px -6px rgba(59, 130, 246, 1)
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--blue-l);
+            background: rgba(59, 130, 246, .18)
+        }
+
+        .btn:active {
+            transform: scale(.97)
+        }
+
+        /* ---------- Glass ---------- */
+        .glass {
+            position: relative;
+            min-width: 0;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .025));
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 10px 34px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .08)
+        }
+
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            .glass {
+                background: #17213A
+            }
+        }
+
+        /* ---------- Metric cards (4-column grid) ---------- */
+        .metrics {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: 1fr
+        }
+
+        @media (min-width:480px) {
+            .metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+        }
+
+        @media (min-width:1200px) {
+            .metrics {
+                grid-template-columns: repeat(4, minmax(0, 1fr))
+            }
+        }
+
+        .metric {
+            --c: var(--blue);
+            --cl: var(--blue-l);
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+            padding: 1.25rem;
+            overflow: hidden;
+            text-decoration: none;
+            transition: transform var(--ease), border-color var(--ease), box-shadow var(--ease)
+        }
+
+        .metric::after {
+            content: "";
+            position: absolute;
+            right: -60px;
+            top: -60px;
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: var(--c);
+            opacity: .22;
+            filter: blur(45px);
+            pointer-events: none;
+            transition: opacity var(--ease)
+        }
+
+        .m-violet {
+            --c: var(--violet);
+            --cl: var(--violet-l)
+        }
+
+        .m-green {
+            --c: var(--green);
+            --cl: var(--green-l)
+        }
+
+        .m-amber {
+            --c: var(--amber);
+            --cl: var(--amber-l)
+        }
+
+        @media (hover:hover) {
+            .metric:hover {
+                transform: translateY(-5px);
+                border-color: var(--c);
+                box-shadow: 0 16px 44px rgba(0, 0, 0, .5), 0 0 34px -6px var(--c)
+            }
+
+            .metric:hover::after {
+                opacity: .4
+            }
+        }
+
+        .metric-icon {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            margin-bottom: .6rem;
+            border-radius: 14px;
+            color: var(--cl);
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid var(--line)
+        }
+
+        .metric-icon svg {
+            width: 24px;
+            height: 24px
+        }
+
+        .metric-label {
+            position: relative;
+            color: var(--muted);
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase
+        }
+
+        .metric-value {
+            position: relative;
+            font-size: clamp(2.2rem, 1.7rem + 1.6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -.03em;
+            font-variant-numeric: tabular-nums;
+            color: var(--cl);
+            text-shadow: 0 0 28px var(--c)
+        }
+
+        .metric-foot {
+            position: relative;
+            margin-top: .35rem;
+            color: var(--muted);
+            font-size: .85rem
+        }
+
+        .alert-dot {
+            position: absolute;
+            right: 1.1rem;
+            top: 1.1rem;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .25rem .6rem;
+            border-radius: 999px;
+            background: rgba(245, 158, 11, .18);
+            border: 1px solid rgba(245, 158, 11, .6);
+            color: var(--amber-l);
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase
+        }
+
+        .alert-dot::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--amber);
+            animation: blink 1.6s ease-in-out infinite
+        }
+
+        @keyframes blink {
+
+            50% {
+                opacity: .25
+            }
+        }
+
+        /* ---------- Analytics row ---------- */
+        .analytics {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: minmax(0, 1fr)
+        }
+
+        @media (min-width:1100px) {
+            .analytics {
+                grid-template-columns: minmax(0, 5fr) minmax(0, 7fr)
+            }
+        }
+
+        .panel {
+            padding: 1.25rem
+        }
+
+        @media (min-width:768px) {
+            .panel {
+                padding: 1.5rem
+            }
+        }
+
+        .panel h2 {
+            margin: 0 0 .2rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .panel .sub {
+            margin: 0 0 1.25rem;
+            color: var(--muted);
+            font-size: .9rem
+        }
+
+        /* Donut chart */
+        .chart-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem
+        }
+
+        @media (min-width:560px) and (max-width:1099.98px) {
+            .chart-body {
+                flex-direction: row;
+                justify-content: center
+            }
+        }
+
+        .donut {
+            --a: 0%;
+            --p: 0%;
+            position: relative;
+            flex: none;
+            width: min(210px, 62vw);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: conic-gradient(var(--green) 0 var(--a), var(--amber) var(--a) calc(var(--a) + var(--p)), var(--red) 0);
+            box-shadow: 0 0 40px -6px rgba(139, 92, 246, .55)
+        }
+
+        .donut.is-empty {
+            background: #243049;
+            box-shadow: none
+        }
+
+        .donut::after {
+            content: "";
+            position: absolute;
+            inset: 17%;
+            border-radius: 50%;
+            background: #111B31;
+            box-shadow: inset 0 0 0 1px var(--line)
+        }
+
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.1
+        }
+
+        .donut-center strong {
+            font-size: clamp(2rem, 1.6rem + 1.2vw, 2.6rem);
+            font-weight: 800;
+            color: #fff;
+            font-variant-numeric: tabular-nums
+        }
+
+        .donut-center span {
+            margin-top: .2rem;
+            color: var(--muted);
+            font-size: .78rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase
+        }
+
+        .legend {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            display: grid;
+            gap: .6rem
+        }
+
+        .legend-row {
+            --c: var(--green);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: .25rem .65rem;
+            padding: .65rem .8rem;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .04);
+            text-decoration: none;
+            transition: transform var(--ease), border-color var(--ease), background-color var(--ease)
+        }
+
+        .legend-row:hover {
+            transform: translateX(4px);
+            border-color: var(--c);
+            background: rgba(255, 255, 255, .08)
+        }
+
+        .lg-amber {
+            --c: var(--amber)
+        }
+
+        .lg-red {
+            --c: var(--red)
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            background: var(--c);
+            box-shadow: 0 0 12px var(--c)
+        }
+
+        .lg-name {
+            font-weight: 600
+        }
+
+        .lg-count {
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums
+        }
+
+        .bar {
+            grid-column: 1 / -1;
+            height: 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .1);
+            overflow: hidden
+        }
+
+        .bar i {
+            display: block;
+            height: 100%;
+            border-radius: 6px;
+            background: var(--c);
+            transition: width .6s ease
+        }
+
+        /* ---------- Table ---------- */
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch
+        }
+
+        .data {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .95rem
+        }
+
+        .data th {
+            padding: .7rem .8rem;
+            text-align: left;
+            color: var(--muted);
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap
+        }
+
+        .data td {
+            padding: .9rem .8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+            vertical-align: middle
+        }
+
+        .data tbody tr {
+            transition: background-color var(--ease)
+        }
+
+        .data tbody tr:hover {
+            background: rgba(255, 255, 255, .05)
+        }
+
+        .data tbody tr:last-child td {
+            border-bottom: 0
+        }
+
+        .num {
+            font-weight: 800;
+            font-size: 1.1rem;
+            font-variant-numeric: tabular-nums
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .3rem .75rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            font-size: .8rem;
+            font-weight: 700
+        }
+
+        .pill::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor
+        }
+
+        .pill-amber {
+            background: rgba(245, 158, 11, .15);
+            border-color: rgba(245, 158, 11, .55);
+            color: var(--amber-l)
+        }
+
+        .pill-green {
+            background: rgba(16, 185, 129, .15);
+            border-color: rgba(16, 185, 129, .55);
+            color: var(--green-l)
+        }
+
+        .pill-red {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .55);
+            color: var(--red-l)
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0
+        }
+
+        /* Below 768px the table turns into stacked cards */
+        @media (max-width:767.98px) {
+
+            .data,
+            .data tbody,
+            .data tr,
+            .data td {
+                display: block;
+                width: 100%
+            }
+
+            .data thead {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0)
+            }
+
+            .data tbody {
+                display: grid;
+                gap: .75rem
+            }
+
+            .data tr {
+                padding: .5rem 1rem;
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                background: rgba(255, 255, 255, .04)
+            }
+
+            .data td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                padding: .6rem 0;
+                border-bottom: 1px solid rgba(255, 255, 255, .06)
+            }
+
+            .data td:last-child {
+                border-bottom: 0
+            }
+
+            .data td::before {
+                content: attr(data-label);
+                color: var(--muted);
+                font-size: .75rem;
+                font-weight: 700;
+                letter-spacing: .08em;
+                text-transform: uppercase
+            }
+        }
+
+        /* ---------- Entrance + reduced motion ---------- */
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .dash>* {
+            animation: rise .6s ease both
+        }
+
+        .dash>*:nth-child(2) {
+            animation-delay: .06s
+        }
+
+        .dash>*:nth-child(3) {
+            animation-delay: .12s
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
+                transition: none !important
+            }
+
+            .btn:hover,
+            .metric:hover,
+            .legend-row:hover {
+                transform: none !important
+            }
+        }
+    </style>
 </head>
 
-<body>
+<body class="hb-dark">
 
 <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
 <div th:replace="~{admin/fragments/header :: header}"></div>
 
-<div class="content">
+<main class="content" id="main-content">
 
-    <h2>Dashboard Overview</h2>
+    <div class="dash">
 
-    <!-- Main Stats -->
-    <div class="cards">
-
-        <a th:href="@{/admin/users}" class="dashboard-card">
-            <div class="card">
-                <h3>Total Users</h3>
-                <h1 th:text="${usersCount}">0</h1>
+        <div class="page-head">
+            <div>
+                <h1>Dashboard Overview</h1>
+                <p>Live totals for users, vendors and grounds.</p>
             </div>
-        </a>
+            <a class="btn btn-primary" th:href="@{/admin/grounds/add}">+ Add Ground</a>
+        </div>
 
-        <a th:href="@{/admin/vendors}" class="dashboard-card">
-            <div class="card">
-                <h3>Total Vendors</h3>
-                <h1 th:text="${vendorsCount}">0</h1>
-            </div>
-        </a>
+        <!-- ================= Main Stats (4-column grid) ================= -->
+        <section class="metrics" aria-label="Key metrics">
 
-        <a th:href="@{/admin/grounds}" class="dashboard-card">
-            <div class="card">
-                <h3>Total Grounds</h3>
-                <h1 th:text="${groundsCount}">0</h1>
-            </div>
-        </a>
+            <a th:href="@{/admin/users}" class="glass metric">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="8" r="3.5"/>
+                        <path d="M2.5 20c.6-3.6 3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/>
+                        <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.7.7 2.7 2.3 3 5.2"/>
+                    </svg>
+                </span>
+                <span class="metric-label">Total Users</span>
+                <span class="metric-value" th:text="${usersCount}">0</span>
+                <span class="metric-foot">Manage users →</span>
+            </a>
+
+            <a th:href="@{/admin/vendors}" class="glass metric m-violet">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 10 5 4h14l2 6"/>
+                        <path d="M4 10v10h16V10M9 20v-6h6v6"/>
+                    </svg>
+                </span>
+                <span class="metric-label">Total Vendors</span>
+                <span class="metric-value" th:text="${vendorsCount}">0</span>
+                <span class="metric-foot">Manage vendors →</span>
+            </a>
+
+            <a th:href="@{/admin/grounds}" class="glass metric m-green">
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <path d="M12 5v14"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </span>
+                <span class="metric-label">Total Grounds</span>
+                <span class="metric-value" th:text="${groundsCount}">0</span>
+                <span class="metric-foot">View all grounds →</span>
+            </a>
+
+            <a th:href="@{/admin/grounds(status='PENDING')}" class="glass metric m-amber">
+                <span class="alert-dot" th:if="${pendingGrounds > 0}">Needs review</span>
+                <span class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3 2.5 20h19L12 3Z"/>
+                        <path d="M12 10v4.5M12 17.4v.1"/>
+                    </svg>
+                </span>
+                <span class="metric-label">Pending Grounds</span>
+                <span class="metric-value" th:text="${pendingGrounds}">0</span>
+                <span class="metric-foot">Review pending →</span>
+            </a>
+
+        </section>
+
+        <!-- ================= Chart + status table ================= -->
+        <div class="analytics"
+             th:with="total=${pendingGrounds + approvedGrounds + rejectedGrounds},
+                      pApproved=${total > 0 ? approvedGrounds * 100.0 / total : 0},
+                      pPending=${total > 0 ? pendingGrounds * 100.0 / total : 0},
+                      pRejected=${total > 0 ? rejectedGrounds * 100.0 / total : 0}">
+
+            <!-- Chart -->
+            <section class="glass panel" aria-labelledby="approval-title">
+                <h2 id="approval-title">Ground Approval Status</h2>
+                <p class="sub">How grounds are split across the approval pipeline.</p>
+
+                <div class="chart-body">
+
+                    <div class="donut"
+                         role="img"
+                         th:classappend="${total == 0} ? 'is-empty'"
+                         th:style="|--a:${pApproved}%;--p:${pPending}%|"
+                         th:attr="aria-label=|Ground approval status: ${approvedGrounds} approved, ${pendingGrounds} pending, ${rejectedGrounds} rejected|">
+                        <div class="donut-center">
+                            <strong th:text="${total}">0</strong>
+                            <span>grounds</span>
+                        </div>
+                    </div>
+
+                    <ul class="legend">
+
+                        <li>
+                            <a th:href="@{/admin/grounds(status='APPROVED')}" class="legend-row">
+                                <span class="dot" aria-hidden="true"></span>
+                                <span class="lg-name">Approved</span>
+                                <span class="lg-count" th:text="${approvedGrounds}">0</span>
+                                <span class="bar" aria-hidden="true"><i th:style="|width:${pApproved}%|"></i></span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a th:href="@{/admin/grounds(status='PENDING')}" class="legend-row lg-amber">
+                                <span class="dot" aria-hidden="true"></span>
+                                <span class="lg-name">Pending</span>
+                                <span class="lg-count" th:text="${pendingGrounds}">0</span>
+                                <span class="bar" aria-hidden="true"><i th:style="|width:${pPending}%|"></i></span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a th:href="@{/admin/grounds(status='REJECTED')}" class="legend-row lg-red">
+                                <span class="dot" aria-hidden="true"></span>
+                                <span class="lg-name">Rejected</span>
+                                <span class="lg-count" th:text="${rejectedGrounds}">0</span>
+                                <span class="bar" aria-hidden="true"><i th:style="|width:${pRejected}%|"></i></span>
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </div>
+            </section>
+
+            <!-- Table (stacks into cards below 768px) -->
+            <section class="glass panel" aria-labelledby="table-title">
+                <h2 id="table-title">Approval Breakdown</h2>
+                <p class="sub">Open any status to see its grounds.</p>
+
+                <div class="table-scroll">
+                    <table class="data">
+                        <caption class="sr-only">Number of grounds by approval status</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">Status</th>
+                            <th scope="col">Grounds</th>
+                            <th scope="col">Share</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <tr>
+                            <td data-label="Status"><span class="pill pill-amber">Pending</span></td>
+                            <td data-label="Grounds"><span class="num" th:text="${pendingGrounds}">0</span></td>
+                            <td data-label="Share" th:text="${#numbers.formatDecimal(pPending, 1, 0)} + '%'">0%</td>
+                            <td data-label="Action">
+                                <a class="btn btn-ghost" th:href="@{/admin/grounds(status='PENDING')}">Review</a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td data-label="Status"><span class="pill pill-green">Approved</span></td>
+                            <td data-label="Grounds"><span class="num" th:text="${approvedGrounds}">0</span></td>
+                            <td data-label="Share" th:text="${#numbers.formatDecimal(pApproved, 1, 0)} + '%'">0%</td>
+                            <td data-label="Action">
+                                <a class="btn btn-ghost" th:href="@{/admin/grounds(status='APPROVED')}">View</a>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td data-label="Status"><span class="pill pill-red">Rejected</span></td>
+                            <td data-label="Grounds"><span class="num" th:text="${rejectedGrounds}">0</span></td>
+                            <td data-label="Share" th:text="${#numbers.formatDecimal(pRejected, 1, 0)} + '%'">0%</td>
+                            <td data-label="Action">
+                                <a class="btn btn-ghost" th:href="@{/admin/grounds(status='REJECTED')}">View</a>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
 
     </div>
 
-    <h2>Ground Approval Status</h2>
-
-    <!-- Ground Status Cards -->
-    <div class="cards">
-
-        <a th:href="@{/admin/grounds(status='PENDING')}" class="dashboard-card">
-            <div class="card">
-                <h3>Pending Grounds</h3>
-                <h1 style="color:#d97706;" th:text="${pendingGrounds}">0</h1>
-            </div>
-        </a>
-
-        <a th:href="@{/admin/grounds(status='APPROVED')}" class="dashboard-card">
-            <div class="card">
-                <h3>Approved Grounds</h3>
-                <h1 style="color:#16a34a;" th:text="${approvedGrounds}">0</h1>
-            </div>
-        </a>
-
-        <a th:href="@{/admin/grounds(status='REJECTED')}" class="dashboard-card">
-            <div class="card">
-                <h3>Rejected Grounds</h3>
-                <h1 style="color:#dc2626;" th:text="${rejectedGrounds}">0</h1>
-            </div>
-        </a>
-
-    </div>
-
-</div>
+</main>
 
 <div th:replace="~{admin/fragments/footer :: footer}"></div>
+
+<!-- Highlights the current page in the sidebar -->
+<script>
+    (function () {
+
+        var path = window.location.pathname.replace(/\/+$/, "");
+        var best = null;
+        var bestLen = -1;
+
+        document.querySelectorAll(".sidebar li a").forEach(function (link) {
+
+            var p = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, "");
+
+            if ((path === p || path.indexOf(p + "/") === 0) && p.length > bestLen) {
+                best = link;
+                bestLen = p.length;
+            }
+        });
+
+        if (best) {
+            best.classList.add("active");
+            best.setAttribute("aria-current", "page");
+        }
+
+    })();
+</script>
 
 </body>
 </html>

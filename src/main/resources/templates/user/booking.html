@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
@@ -10,6 +10,11 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
             rel="stylesheet">
@@ -18,35 +23,38 @@
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
             rel="stylesheet">
 
+    <link th:href="@{/css/hourbook-user.css}"
+          rel="stylesheet">
+
 </head>
 
-<body class="bg-light">
+<body class="hb-body">
 
 <div th:replace="~{user/fragments/sidebar :: sidebar}"></div>
 
 
-<div style="margin-left:260px;">
+<div class="hb-main">
 
     <div th:replace="~{user/fragments/header :: header}"></div>
 
 
-    <div class="container-fluid p-4">
+    <main id="main-content" class="hb-content">
 
         <!-- Heading -->
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="hb-page-head">
 
             <div>
 
-                <h2 class="fw-bold">
+                <h1 class="hb-title">
 
-                    <i class="bi bi-calendar-check text-primary"></i>
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i>
 
                     My Bookings
 
-                </h2>
+                </h1>
 
-                <p class="text-muted mb-0">
+                <p class="hb-subtitle">
 
                     View and manage your ground bookings.
 
@@ -58,7 +66,7 @@
             <a th:href="@{/user/grounds}"
                class="btn btn-primary">
 
-                <i class="bi bi-plus-circle"></i>
+                <i class="bi bi-plus-circle" aria-hidden="true"></i>
 
                 Book a Ground
 
@@ -70,24 +78,23 @@
         <!-- No Bookings -->
 
         <div th:if="${bookings == null or #lists.isEmpty(bookings)}"
-             class="card shadow-sm border-0">
+             class="card hb-empty">
 
-            <div class="card-body text-center p-5">
+            <i class="bi bi-calendar-x" aria-hidden="true"></i>
 
-                <i class="bi bi-calendar-x text-muted"
-                   style="font-size: 60px;"></i>
+            <h2>
 
-                <h4 class="mt-3">
+                No Bookings Found
 
-                    No Bookings Found
+            </h2>
 
-                </h4>
+            <p class="text-muted">
 
-                <p class="text-muted">
+                You haven't booked any ground yet.
 
-                    You haven't booked any ground yet.
+            </p>
 
-                </p>
+            <div>
 
                 <a th:href="@{/user/grounds}"
                    class="btn btn-primary">
@@ -103,65 +110,265 @@
 
         <!-- Booking List -->
 
-        <div class="row g-4"
+        <div class="hb-booking-grid"
              th:if="${bookings != null and !#lists.isEmpty(bookings)}">
 
-            <div class="col-lg-6"
-                 th:each="booking : ${bookings}">
-
-                <div class="card shadow-sm border-0 h-100">
+            <article class="card h-100"
+                     th:each="booking : ${bookings}">
 
 
-                    <!-- Card Header -->
+                <!-- Card Header -->
 
-                    <div class="card-header
-                                d-flex
-                                justify-content-between
-                                align-items-center">
+                <div class="card-header
+                            d-flex
+                            flex-wrap
+                            gap-2
+                            justify-content-between
+                            align-items-center">
 
-                        <strong>
+                    <strong>
 
-                            Booking #
+                        Booking #
 
-                            <span th:text="${booking.id}"></span>
+                        <span th:text="${booking.id}"></span>
 
-                        </strong>
-
-
-                        <!-- PENDING -->
-
-                        <span th:if="${booking.status.name() == 'PENDING'}"
-                              class="badge bg-warning text-dark">
-
-                            Pending
-
-                        </span>
+                    </strong>
 
 
-                        <!-- CONFIRMED -->
+                    <!-- PENDING -->
 
-                        <span th:if="${booking.status.name() == 'CONFIRMED'}"
-                              class="badge bg-success">
+                    <span th:if="${booking.status.name() == 'PENDING'}"
+                          class="hb-badge hb-badge--warning">
 
-                            Confirmed
+                        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
 
-                        </span>
+                        Pending
+
+                    </span>
 
 
-                        <!-- CANCELLED -->
+                    <!-- CONFIRMED -->
 
-                        <span th:if="${booking.status.name() == 'CANCELLED'}"
-                              class="badge bg-danger">
+                    <span th:if="${booking.status.name() == 'CONFIRMED'}"
+                          class="hb-badge hb-badge--success">
+
+                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+
+                        Confirmed
+
+                    </span>
+
+
+                    <!-- CANCELLED -->
+
+                    <span th:if="${booking.status.name() == 'CANCELLED'}"
+                          class="hb-badge hb-badge--danger">
+
+                        <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
+
+                        Cancelled
+
+                    </span>
+
+
+                    <!-- COMPLETED -->
+
+                    <span th:if="${booking.status.name() == 'COMPLETED'}"
+                          class="hb-badge hb-badge--neutral">
+
+                        <i class="bi bi-check2-all" aria-hidden="true"></i>
+
+                        Completed
+
+                    </span>
+
+                </div>
+
+
+                <!-- Card Body -->
+
+                <div class="card-body">
+
+                    <h2 class="h4 fw-bold mb-1"
+                        th:text="${booking.ground.name}">
+
+                        Ground Name
+
+                    </h2>
+
+
+                    <p class="hb-meta mb-3">
+
+                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+
+                        <span th:text="${booking.ground.location}"></span>
+
+                    </p>
+
+
+                    <dl class="hb-dl">
+
+                        <!-- Booking Date -->
+
+                        <div class="hb-dl__row">
+
+                            <dt>
+
+                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+
+                                Booking Date
+
+                            </dt>
+
+                            <dd th:text="${#temporals.format(booking.bookingDate, 'dd MMM yyyy')}">
+                            </dd>
+
+                        </div>
+
+
+                        <!-- Time -->
+
+                        <div class="hb-dl__row">
+
+                            <dt>
+
+                                <i class="bi bi-clock" aria-hidden="true"></i>
+
+                                Time
+
+                            </dt>
+
+                            <dd>
+
+                                <span th:text="${#temporals.format(booking.startTime, 'hh:mm a')}">
+                                </span>
+
+                                -
+
+                                <span th:text="${#temporals.format(booking.endTime, 'hh:mm a')}">
+                                </span>
+
+                            </dd>
+
+                        </div>
+
+
+                        <!-- Total Amount -->
+
+                        <div class="hb-dl__row">
+
+                            <dt>
+
+                                <i class="bi bi-currency-rupee" aria-hidden="true"></i>
+
+                                Total Amount
+
+                            </dt>
+
+                            <dd class="hb-amount">
+
+                                ₹
+
+                                <span th:text="${booking.totalAmount}">
+                                </span>
+
+                            </dd>
+
+                        </div>
+
+                    </dl>
+
+
+                    <!-- Created -->
+
+                    <p class="text-muted mb-0 mt-2">
+
+                        <small>
+
+                            Booked on:
+
+                            <span th:text="${#temporals.format(booking.createdAt, 'dd MMM yyyy hh:mm a')}">
+                            </span>
+
+                        </small>
+
+                    </p>
+
+                </div>
+
+
+                <!-- Card Footer -->
+
+                <div class="card-footer bg-white">
+
+                    <div class="hb-booking-actions">
+
+
+                        <!-- View Ground -->
+
+                        <a th:href="@{/user/grounds/{id}(id=${booking.ground.id})}"
+                           class="btn btn-outline-primary">
+
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+
+                            View Ground
+
+                        </a>
+
+
+                        <!-- Cancel Booking -->
+                        <!-- Only PENDING or CONFIRMED -->
+
+                        <form
+                                th:if="${booking.status.name() == 'PENDING'
+                                or booking.status.name() == 'CONFIRMED'}"
+
+                                th:action="@{/user/bookings/cancel/{id}(id=${booking.id})}"
+
+                                method="post">
+
+                            <button
+                                    type="submit"
+
+                                    class="btn btn-outline-danger"
+
+                                    onclick="return confirm(
+                                    'Are you sure you want to cancel this booking?'
+                                    )">
+
+                                <i class="bi bi-x-circle" aria-hidden="true"></i>
+
+                                Cancel
+
+                            </button>
+
+                        </form>
+
+
+                        <!-- Cancelled message -->
+
+                        <span
+                                th:if="${booking.status.name() == 'CANCELLED'}"
+
+                                class="btn btn-outline-secondary disabled"
+                                aria-disabled="true">
+
+                            <i class="bi bi-x-circle" aria-hidden="true"></i>
 
                             Cancelled
 
                         </span>
 
 
-                        <!-- COMPLETED -->
+                        <!-- Completed message -->
 
-                        <span th:if="${booking.status.name() == 'COMPLETED'}"
-                              class="badge bg-secondary">
+                        <span
+                                th:if="${booking.status.name() == 'COMPLETED'}"
+
+                                class="btn btn-outline-secondary disabled"
+                                aria-disabled="true">
+
+                            <i class="bi bi-check-circle" aria-hidden="true"></i>
 
                             Completed
 
@@ -169,210 +376,13 @@
 
                     </div>
 
-
-                    <!-- Card Body -->
-
-                    <div class="card-body">
-
-                        <h4 class="fw-bold"
-                            th:text="${booking.ground.name}">
-
-                            Ground Name
-
-                        </h4>
-
-
-                        <p class="mb-2 text-muted">
-
-                            <i class="bi bi-geo-alt-fill text-danger"></i>
-
-                            <span th:text="${booking.ground.location}"></span>
-
-                        </p>
-
-
-                        <hr>
-
-
-                        <!-- Booking Date -->
-
-                        <p>
-
-                            <strong>
-
-                                <i class="bi bi-calendar-event"></i>
-
-                                Booking Date:
-
-                            </strong>
-
-                            <span th:text="${#temporals.format(
-                                    booking.bookingDate,
-                                    'dd MMM yyyy'
-                            )}">
-                            </span>
-
-                        </p>
-
-
-                        <!-- Time -->
-
-                        <p>
-
-                            <strong>
-
-                                <i class="bi bi-clock"></i>
-
-                                Time:
-
-                            </strong>
-
-                            <span th:text="${#temporals.format(
-                                    booking.startTime,
-                                    'hh:mm a'
-                            )}">
-                            </span>
-
-                            -
-
-                            <span th:text="${#temporals.format(
-                                    booking.endTime,
-                                    'hh:mm a'
-                            )}">
-                            </span>
-
-                        </p>
-
-
-                        <!-- Total Amount -->
-
-                        <p>
-
-                            <strong>
-
-                                <i class="bi bi-currency-rupee"></i>
-
-                                Total Amount:
-
-                            </strong>
-
-                            ₹
-
-                            <span th:text="${booking.totalAmount}">
-                            </span>
-
-                        </p>
-
-
-                        <!-- Created -->
-
-                        <p class="text-muted mb-0">
-
-                            <small>
-
-                                Booked on:
-
-                                <span th:text="${#temporals.format(
-                                        booking.createdAt,
-                                        'dd MMM yyyy hh:mm a'
-                                )}">
-                                </span>
-
-                            </small>
-
-                        </p>
-
-                    </div>
-
-
-                    <!-- Card Footer -->
-
-                    <div class="card-footer bg-white">
-
-                        <div class="d-flex gap-2">
-
-
-                            <!-- View Ground -->
-
-                            <a th:href="@{/user/grounds/{id}(id=${booking.ground.id})}"
-                               class="btn btn-outline-primary flex-fill">
-
-                                <i class="bi bi-eye"></i>
-
-                                View Ground
-
-                            </a>
-
-
-                            <!-- Cancel Booking -->
-                            <!-- Only PENDING or CONFIRMED -->
-
-                            <form
-                                    th:if="${booking.status.name() == 'PENDING'
-                                    or booking.status.name() == 'CONFIRMED'}"
-
-                                    th:action="@{/user/bookings/cancel/{id}(id=${booking.id})}"
-
-                                    method="post"
-
-                                    class="d-inline">
-
-                                <button
-                                        type="submit"
-
-                                        class="btn btn-outline-danger"
-
-                                        onclick="return confirm(
-                                        'Are you sure you want to cancel this booking?'
-                                        )">
-
-                                    <i class="bi bi-x-circle"></i>
-
-                                    Cancel
-
-                                </button>
-
-                            </form>
-
-
-                            <!-- Cancelled message -->
-
-                            <span
-                                    th:if="${booking.status.name() == 'CANCELLED'}"
-
-                                    class="btn btn-outline-secondary disabled">
-
-                                <i class="bi bi-x-circle"></i>
-
-                                Cancelled
-
-                            </span>
-
-
-                            <!-- Completed message -->
-
-                            <span
-                                    th:if="${booking.status.name() == 'COMPLETED'}"
-
-                                    class="btn btn-outline-secondary disabled">
-
-                                <i class="bi bi-check-circle"></i>
-
-                                Completed
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
                 </div>
 
-            </div>
+            </article>
 
         </div>
 
-    </div>
+    </main>
 
 
     <div th:replace="~{user/fragments/footer :: footer}"></div>

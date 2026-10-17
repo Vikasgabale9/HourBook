@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
@@ -9,6 +9,12 @@
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1">
+
+    <!-- Inter font (falls back to system fonts if unavailable) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
 
     <!-- Bootstrap -->
     <link
@@ -20,9 +26,13 @@
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
             rel="stylesheet">
 
+    <!-- HourBook User Panel design system -->
+    <link th:href="@{/css/hourbook-user.css}"
+          rel="stylesheet">
+
 </head>
 
-<body class="bg-light">
+<body class="hb-body">
 
 
 <!-- ================= SIDEBAR ================= -->
@@ -32,31 +42,31 @@
 
 <!-- ================= MAIN CONTENT ================= -->
 
-<div style="margin-left:260px;">
+<div class="hb-main">
 
     <!-- Header -->
 
     <div th:replace="~{user/fragments/header :: header}"></div>
 
 
-    <div class="container-fluid p-4">
+    <main id="main-content" class="hb-content">
 
 
         <!-- ================= PAGE HEADER ================= -->
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="hb-page-head">
 
             <div>
 
-                <h2 class="fw-bold">
+                <h1 class="hb-title">
 
-                    <i class="bi bi-building text-primary"></i>
+                    <i class="bi bi-building" aria-hidden="true"></i>
 
                     Browse Grounds
 
-                </h2>
+                </h1>
 
-                <p class="text-muted mb-0">
+                <p class="hb-subtitle">
 
                     Find your favorite sports ground.
 
@@ -70,8 +80,9 @@
         <!-- ================= SEARCH ================= -->
 
         <form
-                class="row g-2 mb-4"
+                class="hb-filter card"
                 method="get"
+                role="search"
                 th:action="@{/user/grounds}">
 
 
@@ -83,76 +94,100 @@
                     th:value="${groundPage.size}">
 
 
-            <!-- Search -->
+            <div class="hb-filter__row">
 
-            <div class="col-md-6">
+                <!-- Search -->
 
-                <input
-                        type="text"
-                        class="form-control"
-                        name="search"
-                        placeholder="Search by Ground Name"
-                        th:value="${search}">
+                <div class="hb-filter__search">
 
-            </div>
+                    <label for="groundSearch" class="visually-hidden">
+
+                        Search by ground name
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text" aria-hidden="true">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                                type="text"
+                                id="groundSearch"
+                                class="form-control"
+                                name="search"
+                                placeholder="Search by Ground Name"
+                                th:value="${search}">
+
+                    </div>
+
+                </div>
 
 
-            <!-- Search Button -->
+                <div class="hb-filter__actions">
 
-            <div class="col-md-2">
+                    <!-- Search Button -->
 
-                <button
-                        type="submit"
-                        class="btn btn-primary w-100">
+                    <button
+                            type="submit"
+                            class="btn btn-primary">
 
-                    <i class="bi bi-search"></i>
+                        <i class="bi bi-search" aria-hidden="true"></i>
 
-                    Search
+                        Search
 
-                </button>
-
-            </div>
+                    </button>
 
 
-            <!-- Reset -->
+                    <!-- Reset -->
 
-            <div class="col-md-2">
+                    <a
+                            th:href="@{/user/grounds}"
+                            class="btn btn-outline-secondary">
 
-                <a
-                        th:href="@{/user/grounds}"
-                        class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
 
-                    <i class="bi bi-arrow-counterclockwise"></i>
+                        Reset
 
-                    Reset
+                    </a>
 
-                </a>
+                </div>
 
             </div>
 
         </form>
 
 
+        <p class="hb-count"
+           th:if="${groundPage.totalElements > 0}">
+
+            <strong th:text="${groundPage.totalElements}">0</strong>
+
+            grounds found
+
+        </p>
+
+
         <!-- ================= GROUND CARDS ================= -->
 
-        <div class="row g-4">
+        <div class="hb-ground-grid">
 
 
-            <div
-                    class="col-lg-4 col-md-6"
+            <article
+                    class="hb-ground-card"
                     th:each="ground : ${grounds}">
 
 
-                <div class="card shadow-sm h-100 border-0">
+                <!-- ================= GROUND IMAGE ================= -->
 
-
-                    <!-- ================= GROUND IMAGE ================= -->
+                <div class="hb-ground-media">
 
                     <img
                             th:if="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
                             th:src="@{${ground.imageUrls[0]}}"
-                            class="card-img-top"
-                            style="height:220px;object-fit:cover;"
+                            th:alt="'Photo of ' + ${ground.name}"
+                            loading="lazy"
                             alt="Ground Image">
 
 
@@ -161,122 +196,125 @@
                     <img
                             th:unless="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
                             src="https://placehold.co/600x400?text=Ground"
-                            class="card-img-top"
-                            style="height:220px;object-fit:cover;"
-                            alt="Ground Image">
+                            loading="lazy"
+                            alt="No ground photo available">
 
 
-                    <!-- ================= CARD BODY ================= -->
+                    <!-- Status -->
 
-                    <div class="card-body">
+                    <span class="hb-badge hb-badge--success">
 
+                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
 
-                        <!-- Ground Name -->
+                        Available
 
-                        <h4
-                                class="fw-bold"
-                                th:text="${ground.name}">
+                    </span>
 
-                            Ground Name
-
-                        </h4>
+                </div>
 
 
-                        <!-- Location -->
+                <!-- ================= CARD BODY ================= -->
 
-                        <p class="mb-2">
-
-                            <i class="bi bi-geo-alt-fill text-danger"></i>
-
-                            <span
-                                    th:text="${ground.location}">
-                                Location
-                            </span>
-
-                        </p>
+                <div class="hb-ground-body">
 
 
-                        <!-- Sports -->
+                    <!-- Ground Name -->
 
-                        <p class="mb-2">
+                    <h2
+                            class="hb-ground-name"
+                            th:text="${ground.name}">
 
-                            <i class="bi bi-dribbble text-success"></i>
+                        Ground Name
 
-                            <span
-                                    th:text="${ground.sports}">
-                                Sports
-                            </span>
-
-                        </p>
+                    </h2>
 
 
-                        <!-- Price -->
+                    <!-- Location -->
 
-                        <p class="mb-2">
+                    <p class="hb-meta">
 
-                            <i class="bi bi-currency-rupee"></i>
+                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
 
-                            <strong
-                                    th:text="${ground.pricePerHour}">
-                                0
-                            </strong>
+                        <span
+                                th:text="${ground.location}">
+                            Location
+                        </span>
 
-                            / Hour
-
-                        </p>
+                    </p>
 
 
-                        <!-- Ground Type -->
+                    <!-- Sports -->
 
-                        <p class="mb-3">
+                    <p class="hb-meta">
 
-                            <strong>
-                                Type :
-                            </strong>
+                        <i class="bi bi-dribbble" aria-hidden="true"></i>
+
+                        <span
+                                th:text="${ground.sports}">
+                            Sports
+                        </span>
+
+                    </p>
+
+
+                    <!-- Ground Type -->
+
+                    <p class="hb-meta">
+
+                        <i class="bi bi-grid" aria-hidden="true"></i>
+
+                        <span>
+
+                            Type:
 
                             <span
                                     th:text="${ground.type}">
                                 Ground Type
                             </span>
 
-                        </p>
-
-
-                        <!-- Status -->
-
-                        <span class="badge bg-success">
-
-                            <i class="bi bi-check-circle me-1"></i>
-
-                            Available
-
                         </span>
 
-
-                    </div>
-
-
-                    <!-- ================= CARD FOOTER ================= -->
-
-                    <div class="card-footer bg-white border-0">
+                    </p>
 
 
-                        <a
-                                th:href="@{/user/grounds/{id}(id=${ground.id})}"
-                                class="btn btn-primary w-100">
+                    <!-- Price -->
 
-                            <i class="bi bi-eye"></i>
+                    <p class="hb-price">
 
-                            View Details
+                        ₹
 
-                        </a>
+                        <span
+                                th:text="${ground.pricePerHour}">
+                            0
+                        </span>
 
+                        <small>/ hour</small>
 
-                    </div>
+                    </p>
+
 
                 </div>
 
-            </div>
+
+                <!-- ================= CARD FOOTER ================= -->
+
+                <div class="hb-ground-foot">
+
+
+                    <a
+                            th:href="@{/user/grounds/{id}(id=${ground.id})}"
+                            class="btn btn-primary w-100">
+
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+
+                        View Details
+
+                    </a>
+
+
+                </div>
+
+            </article>
 
         </div>
 
@@ -284,18 +322,18 @@
         <!-- ================= NO DATA ================= -->
 
         <div
-                class="alert alert-warning mt-4 text-center"
+                class="card hb-empty mt-4"
                 th:if="${groundPage.totalElements == 0}">
 
-            <h5 class="mb-0">
+            <i class="bi bi-search" aria-hidden="true"></i>
 
-                <i class="bi bi-exclamation-circle me-2"></i>
+            <h2>
 
                 No Grounds Found
 
-            </h5>
+            </h2>
 
-            <p class="mb-0 mt-2">
+            <p class="text-muted mb-0">
 
                 Try searching with a different ground name.
 
@@ -336,7 +374,7 @@
             </div>
 
 
-            <nav>
+            <nav aria-label="Ground pages">
 
                 <ul class="pagination justify-content-center">
 
@@ -356,7 +394,7 @@
                                     search=${search}
                                 )}">
 
-                            <i class="bi bi-chevron-left"></i>
+                            <i class="bi bi-chevron-left" aria-hidden="true"></i>
 
                             Previous
 
@@ -366,9 +404,10 @@
 
 
                     <!-- ================= PAGE NUMBERS ================= -->
+                    <!-- On phones only the current page number is shown -->
 
                     <li
-                            class="page-item"
+                            class="page-item hb-page-num"
                             th:each="i : ${#numbers.sequence(
                                 0,
                                 groundPage.totalPages - 1
@@ -409,7 +448,7 @@
 
                             Next
 
-                            <i class="bi bi-chevron-right"></i>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
 
                         </a>
 
@@ -422,7 +461,7 @@
         </div>
 
 
-    </div>
+    </main>
 
 
     <!-- ================= FOOTER ================= -->

@@ -4,6 +4,16 @@
 <head>
     <title>Bookings Management</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-dark.css}">
+    <style>
+        .bookings-section-title{
+            font-size:15px;
+            font-weight:700;
+            letter-spacing:-.01em;
+            color:#1e3a8a;
+            margin:0 0 16px;
+        }
+    </style>
 </head>
 
 <body>
@@ -20,17 +30,17 @@
 
         <div class="card">
             <h3>Total Bookings</h3>
-            <h1>50</h1>
+            <h1 class="stat-value">50</h1>
         </div>
 
         <div class="card">
             <h3>Today's Bookings</h3>
-            <h1>8</h1>
+            <h1 class="stat-value">8</h1>
         </div>
 
         <div class="card">
             <h3>Cancelled</h3>
-            <h1 style="color:#dc2626;">2</h1>
+            <h1 class="stat-value stat-danger">2</h1>
         </div>
 
     </div>
@@ -38,10 +48,11 @@
     <!-- Bookings Table -->
     <div class="table-container">
 
-        <h3 style="margin-bottom:20px;color:#1e3a8a;">Recent Bookings</h3>
+        <h3 class="bookings-section-title">Recent Bookings</h3>
 
-        <table>
-            <thead>
+        <div class="table-scroll">
+            <table class="bookings-table">
+                <thead>
                 <tr>
                     <th>Booking ID</th>
                     <th>User</th>
@@ -50,12 +61,12 @@
                     <th>Time Slot</th>
                     <th>Status</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 <tr>
                     <td>#101</td>
                     <td>Vikas</td>
-                    <td>Elite Cricket Ground</td>
+                    <td class="wrap-cell">Elite Cricket Ground</td>
                     <td>20-Jun-2026</td>
                     <td>06:00 PM – 07:00 PM</td>
                     <td><span class="status-active">Confirmed</span></td>
@@ -63,7 +74,7 @@
                 <tr>
                     <td>#102</td>
                     <td>Rahul</td>
-                    <td>Victory Turf</td>
+                    <td class="wrap-cell">Victory Turf</td>
                     <td>20-Jun-2026</td>
                     <td>07:00 PM – 08:00 PM</td>
                     <td><span class="status-active">Confirmed</span></td>
@@ -71,13 +82,14 @@
                 <tr>
                     <td>#103</td>
                     <td>Kiran</td>
-                    <td>Champion Arena</td>
+                    <td class="wrap-cell">Champion Arena</td>
                     <td>21-Jun-2026</td>
                     <td>08:00 AM – 09:00 AM</td>
                     <td><span class="status-inactive">Cancelled</span></td>
                 </tr>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
 
     </div>
 
