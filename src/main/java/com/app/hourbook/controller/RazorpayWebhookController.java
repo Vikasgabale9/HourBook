@@ -1,3 +1,4 @@
+
 package com.app.hourbook.controller;
 
 import org.springframework.http.HttpStatus;
@@ -8,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.app.hourbook.service.RazorpayWebhookService;
 import com.app.hourbook.service.PaymentService;
+import com.app.hourbook.service.RazorpayWebhookService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,14 +25,31 @@ public class RazorpayWebhookController {
     @PostMapping
     public ResponseEntity<String> receiveWebhook(
             @RequestBody String rawBody,
-            @RequestHeader(value = "X-Razorpay-Signature", required = false) String signature) {
+            @RequestHeader(
+                    value = "X-Razorpay-Signature",
+                    required = false
+            ) String signature,
+            @RequestHeader(
+                    value = "x-razorpay-event-id",
+                    required = false
+            ) String eventId) {
 
+        // Verify the original, unmodified request body first.
         if (!paymentService.verifyWebhookSignature(rawBody, signature)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid Razorpay webhook signature");
         }
 
-        webhookService.processEvent(rawBody);
-        return ResponseEntity.ok("Webhook processed");
+        if (eventId == null || eventId.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Missing Razorpay event ID");
+        }
+
+        // Exceptions should propagate so Spring can return a 5xx response.
+        // Razorpay can then retry transient processing failures.
+        webhookService.processEvent(rawBody, eventId);
+ 
+        System.out.println("++++++++++++++++++++++++++++/Webhook++++++++++++++++++++++++++++++++++++++");
+        return ResponseEntity.ok("Webhook received");
     }
 }
