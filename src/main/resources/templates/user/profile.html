@@ -76,7 +76,7 @@
                             <!-- Uploaded Profile Image -->
 
                             <img th:if="${user.profileImage != null and !user.profileImage.isEmpty()}"
-                                 th:src="@{${user.profileImage}}"
+                                 th:src="${user.profileImage}"
                                  class="hb-profile-avatar"
                                  width="150"
                                  height="150"

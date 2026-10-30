@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.hourbook.dto.admin.AdminLoginRequest;
 import com.app.hourbook.enums.GroundStatus;
+import com.app.hourbook.enums.Role;
 import com.app.hourbook.model.AppAdmin;
 import com.app.hourbook.model.AppUserDetails;
 import com.app.hourbook.model.Ground;
@@ -24,8 +25,12 @@ import com.app.hourbook.repository.VendorRepository;
 import com.app.hourbook.service.AdminMvcService;
 
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("/admin")
 public class AdminMvcController {
 
@@ -36,21 +41,8 @@ public class AdminMvcController {
 	private final VendorDetailsRepository vendorDetailsRepository;
 
 
+	private final PasswordEncoder passwordEncoder;
 	private final AdminMvcService adminMvcService;
-	
-	
-
-	public AdminMvcController(AdminRepository adminRepository, AppUserDetailsRepository userRepository,
-			VendorRepository vendorRepository, GroundRepository groundRepository,
-			VendorDetailsRepository vendorDetailsRepository, AdminMvcService adminMvcService) {
-		super();
-		this.adminRepository = adminRepository;
-		this.userRepository = userRepository;
-		this.vendorRepository = vendorRepository;
-		this.groundRepository = groundRepository;
-		this.vendorDetailsRepository = vendorDetailsRepository;
-		this.adminMvcService = adminMvcService;
-	}
 
 	@PostMapping("/users/status/{id}")
 	public String changeUserStatus(@PathVariable Integer id) {
@@ -71,22 +63,38 @@ public class AdminMvcController {
 	}
 
 	@PostMapping("/login")
-	public String login(@ModelAttribute AdminLoginRequest request, Model model, HttpSession session) {
+	public String login(
+	        @ModelAttribute AdminLoginRequest request,
+	        Model model,
+	        HttpSession session) {
 
-		AppAdmin admin = adminRepository.findByEmail(request.getEmail()).orElse(null);
+	    AppAdmin admin = adminRepository
+	            .findByEmail(request.getEmail())
+	            .orElse(null);
 
-		if (admin == null || !admin.getPassword().equals(request.getPassword())) {
+	    if (admin == null ||
+	            !passwordEncoder.matches(
+	                    request.getPassword(),
+	                    admin.getPassword())) {
 
-			model.addAttribute("error", "Invalid email or password");
+	        model.addAttribute("error", "Invalid email or password");
+	        return "admin/login";
+	    }
 
-			return "admin/login";
-		}
+	    if (!admin.isVerified()) {
+	        model.addAttribute("error", "Admin account is not verified");
+	        return "admin/login";
+	    }
 
-		session.setAttribute("ADMIN", admin);
+	    if (admin.getRole() != Role.ROLE_ADMIN) {
+	        model.addAttribute("error", "Unauthorized access");
+	        return "admin/login";
+	    }
 
-		return "redirect:/admin/dashboard";
+	    session.setAttribute("ADMIN", admin);
+
+	    return "redirect:/admin/dashboard";
 	}
-
 	@GetMapping("/logout")
 	public String logout(HttpSession session) {
 		session.invalidate();

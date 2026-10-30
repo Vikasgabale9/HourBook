@@ -90,7 +90,7 @@
                             <!-- Existing image -->
 
                             <img th:if="${user.profileImage != null and !user.profileImage.isEmpty()}"
-                                 th:src="@{${user.profileImage}}"
+                                 th:src="${user.profileImage}"
                                  id="profilePreview"
                                  class="hb-profile-avatar"
                                  width="150"

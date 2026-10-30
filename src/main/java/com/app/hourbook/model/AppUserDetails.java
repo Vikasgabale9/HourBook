@@ -44,10 +44,7 @@ public class AppUserDetails {
     private boolean emailVerified;
 
     /*
-     * User profile image path
-     *
-     * Example:
-     * /uploads/user/profile/abc123_profile.jpg
+     * User profile image URL returned by Cloudinary.
      */
     private String profileImage;
 

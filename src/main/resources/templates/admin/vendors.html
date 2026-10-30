@@ -115,24 +115,17 @@
 
 					<td th:text="${vendorPage.number * vendorPage.size + stat.count}"></td>
 
-					<!-- Profile column:
-                         - If profileImage is null/empty → fallback avatar only.
-                         - If profileImage starts with "/" or "http" → used as-is.
-                         - Otherwise → prefixed with "/uploads/".
-                         - onerror hides the broken img so the fallback shows through. -->
+					<!-- Cloudinary profile URL -->
 					<td class="profile-cell">
-								<span class="profile-avatar-wrap">
-									<span class="profile-avatar-fallback" aria-hidden="true">👤</span>
-									<img th:if="${vendor.profileImage != null and !vendor.profileImage.isEmpty()}"
-										 th:src="${#strings.startsWith(vendor.profileImage, '/')
-												   or #strings.startsWith(vendor.profileImage, 'http')
-													 ? vendor.profileImage
-													 : '/uploads/' + vendor.profileImage}"
-										 alt="Profile image"
-										 class="profile-avatar"
-										 loading="lazy"
-										 onerror="this.style.display='none';">
-								</span>
+						<span class="profile-avatar-wrap">
+							<span class="profile-avatar-fallback" aria-hidden="true">👤</span>
+							<img th:if="${vendor.profileImage != null and !#strings.isEmpty(vendor.profileImage)}"
+							     th:src="${vendor.profileImage}"
+							     alt="Profile image"
+							     class="profile-avatar"
+							     loading="lazy"
+							     onerror="this.style.display='none';">
+						</span>
 					</td>
 
 					<td th:text="${vendor.id}"></td>

@@ -34,7 +34,6 @@ public class SecurityConfig {
 								"/css/**",
 								"/js/**",
 								"/images/**",
-								"/uploads/**",
 								"/favicon.ico",
 								"/webhooks/razorpay"
 								)

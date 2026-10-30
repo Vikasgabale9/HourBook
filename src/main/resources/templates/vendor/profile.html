@@ -72,25 +72,25 @@
                     <div class="card-body text-center">
 
 
-                        <!-- Profile Image -->
-                        <img th:if="${vendor.profileImage != null}"
-                             th:src="@{${vendor.profileImage}}"
-                             class="rounded-circle mb-3"
-                             width="140"
-                             height="140"
-                             style="object-fit: cover;"
-                             alt="Vendor Profile">
+						<!-- Profile Image -->
+						<img th:if="${vendor.profileImage != null
+						             and !#strings.isEmpty(vendor.profileImage)}"
+						     th:src="${vendor.profileImage}"
+						     class="rounded-circle mb-3 border"
+						     width="140"
+						     height="140"
+						     style="object-fit: cover;"
+						     alt="Vendor Profile">
 
-
-                        <!-- Default Image -->
-                        <img th:unless="${vendor.profileImage != null}"
-                             src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                             class="rounded-circle mb-3"
-                             width="140"
-                             height="140"
-                             style="object-fit: cover;"
-                             alt="Default Profile">
-
+						<!-- Default Image -->
+						<img th:unless="${vendor.profileImage != null
+						                 and !#strings.isEmpty(vendor.profileImage)}"
+						     src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+						     class="rounded-circle mb-3 border"
+						     width="140"
+						     height="140"
+						     style="object-fit: cover;"
+						     alt="Default Profile">
 
                         <!-- Name -->
                         <h4 th:text="${vendor.fullName}">

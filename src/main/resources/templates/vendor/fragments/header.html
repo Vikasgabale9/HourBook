@@ -1,3 +1,4 @@
+
 <div th:fragment="header">
 
     <header class="vp-topbar">
@@ -10,7 +11,9 @@
                     aria-label="Open navigation menu"
                     aria-controls="vpSidebar"
                     aria-expanded="false">
+
                 <i class="bi bi-list" aria-hidden="true"></i>
+
             </button>
 
             <h4 class="fw-bold mb-0">
@@ -35,23 +38,32 @@
 
             </div>
 
-            <!-- Real Vendor Profile Image -->
-            <img th:if="${session.profileImage != null and !session.profileImage.isEmpty()}"
-                 th:src="@{${session.profileImage}}"
-                 alt="Vendor Profile"
-                 class="rounded-circle border"
-                 width="48"
-                 height="48"
-                 style="object-fit: cover;">
+            <!-- Cloudinary Profile Image -->
+            <a th:href="@{/vendor/profile}"
+               class="vp-avatar-link"
+               aria-label="View vendor profile">
 
-            <!-- Default Profile Image -->
-            <img th:unless="${session.profileImage != null and !session.profileImage.isEmpty()}"
-                 src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                 alt="Default Profile"
-                 class="rounded-circle border"
-                 width="48"
-                 height="48"
-                 style="object-fit: cover;">
+                <img th:if="${session.profileImage != null
+                              and !#strings.isEmpty(session.profileImage)}"
+                     th:src="${session.profileImage}"
+                     alt="Vendor Profile"
+                     class="rounded-circle border"
+                     width="48"
+                     height="48"
+                     style="object-fit: cover;"
+                     loading="lazy">
+
+                <!-- Default Profile Image -->
+                <img th:unless="${session.profileImage != null
+                                  and !#strings.isEmpty(session.profileImage)}"
+                     src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                     alt="Default Vendor Profile"
+                     class="rounded-circle border"
+                     width="48"
+                     height="48"
+                     style="object-fit: cover;">
+
+            </a>
 
         </div>
 
@@ -62,46 +74,104 @@
 
     <script>
         (function () {
+
             var sidebar = document.getElementById("vpSidebar");
             var overlay = document.getElementById("vpOverlay");
             var menuBtn = document.getElementById("vpMenuBtn");
             var closeBtn = document.getElementById("vpClose");
-            if (!sidebar || !overlay || !menuBtn) { return; }
 
-            function isMobile() { return window.matchMedia("(max-width: 991.98px)").matches; }
+            if (!sidebar || !overlay || !menuBtn) {
+                return;
+            }
+
+            function isMobile() {
+                return window.matchMedia(
+                    "(max-width: 991.98px)"
+                ).matches;
+            }
 
             function openNav() {
+
                 sidebar.classList.add("open");
                 overlay.hidden = false;
+
                 void overlay.offsetWidth;
+
                 overlay.classList.add("show");
                 document.body.classList.add("vp-nav-open");
+
                 menuBtn.setAttribute("aria-expanded", "true");
-                if (closeBtn) { closeBtn.focus(); }
+
+                if (closeBtn) {
+                    closeBtn.focus();
+                }
             }
 
             function closeNav() {
+
                 sidebar.classList.remove("open");
                 overlay.classList.remove("show");
+
                 document.body.classList.remove("vp-nav-open");
+
                 menuBtn.setAttribute("aria-expanded", "false");
+
                 window.setTimeout(function () {
-                    if (!overlay.classList.contains("show")) { overlay.hidden = true; }
+
+                    if (!overlay.classList.contains("show")) {
+                        overlay.hidden = true;
+                    }
+
                 }, 240);
             }
 
             menuBtn.addEventListener("click", function () {
-                if (sidebar.classList.contains("open")) { closeNav(); } else { openNav(); }
+
+                if (sidebar.classList.contains("open")) {
+                    closeNav();
+                } else {
+                    openNav();
+                }
+
             });
-            if (closeBtn) { closeBtn.addEventListener("click", closeNav); }
+
+            if (closeBtn) {
+                closeBtn.addEventListener("click", closeNav);
+            }
+
             overlay.addEventListener("click", closeNav);
+
             sidebar.querySelectorAll("a").forEach(function (link) {
-                link.addEventListener("click", function () { if (isMobile()) { closeNav(); } });
+
+                link.addEventListener("click", function () {
+
+                    if (isMobile()) {
+                        closeNav();
+                    }
+
+                });
+
             });
-            window.addEventListener("resize", function () { if (!isMobile()) { closeNav(); } });
-            document.addEventListener("keydown", function (e) {
-                if (e.key === "Escape" && sidebar.classList.contains("open")) { closeNav(); }
+
+            window.addEventListener("resize", function () {
+
+                if (!isMobile()) {
+                    closeNav();
+                }
+
             });
+
+            document.addEventListener("keydown", function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    sidebar.classList.contains("open")
+                ) {
+                    closeNav();
+                }
+
+            });
+
         })();
     </script>
 

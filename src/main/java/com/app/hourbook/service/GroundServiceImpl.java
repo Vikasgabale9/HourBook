@@ -2,13 +2,8 @@
 package com.app.hourbook.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +25,7 @@ public class GroundServiceImpl implements GroundService {
 
     private final GroundRepository groundRepository;
     private final VendorRepository vendorRepository;
+    private final CloudinaryImageService cloudinaryImageService;
 
     // ==================== CREATE GROUND ====================
 
@@ -53,16 +49,20 @@ public class GroundServiceImpl implements GroundService {
         ground.setSlotDurationMinutes(
                 dto.getSlotDurationMinutes() != null
                         ? dto.getSlotDurationMinutes()
-                        : 60);
+                        : 60
+        );
 
         ground.setIsActive(true);
         ground.setStatus(GroundStatus.PENDING);
 
         Vendor vendor = vendorRepository.findById(dto.getVendorId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Vendor not found"));
+                        new ResourceNotFoundException("Vendor not found")
+                );
 
         ground.setVendor(vendor);
+
+        // Upload ground images to Cloudinary.
         ground.setImageUrls(saveImages(images));
 
         Ground savedGround = groundRepository.save(ground);
@@ -75,10 +75,10 @@ public class GroundServiceImpl implements GroundService {
     @Override
     public GroundResponseDto getGroundById(Integer groundId) {
 
-        // Fetch ground and amenities together to avoid lazy-loading errors.
         Ground ground = groundRepository.findWithAmenitiesById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         return mapToResponse(ground);
     }
@@ -110,10 +110,10 @@ public class GroundServiceImpl implements GroundService {
             GroundRequestDto dto,
             MultipartFile[] images) throws IOException {
 
-        // Fetch ground and amenities together.
         Ground ground = groundRepository.findWithAmenitiesById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         ground.setName(dto.getName());
         ground.setLocation(dto.getLocation());
@@ -128,12 +128,14 @@ public class GroundServiceImpl implements GroundService {
         ground.setSlotDurationMinutes(
                 dto.getSlotDurationMinutes() != null
                         ? dto.getSlotDurationMinutes()
-                        : 60);
+                        : 60
+        );
 
         // Update vendor.
         Vendor vendor = vendorRepository.findById(dto.getVendorId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Vendor not found"));
+                        new ResourceNotFoundException("Vendor not found")
+                );
 
         ground.setVendor(vendor);
 
@@ -156,7 +158,8 @@ public class GroundServiceImpl implements GroundService {
 
         Ground ground = groundRepository.findById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         ground.setIsActive(false);
         groundRepository.save(ground);
@@ -171,7 +174,8 @@ public class GroundServiceImpl implements GroundService {
 
         Ground ground = groundRepository.findById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         ground.setIsActive(true);
         groundRepository.save(ground);
@@ -186,7 +190,8 @@ public class GroundServiceImpl implements GroundService {
 
         Ground ground = groundRepository.findById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         ground.setStatus(GroundStatus.APPROVED);
         groundRepository.save(ground);
@@ -201,7 +206,8 @@ public class GroundServiceImpl implements GroundService {
 
         Ground ground = groundRepository.findById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         ground.setStatus(GroundStatus.REJECTED);
         groundRepository.save(ground);
@@ -216,45 +222,35 @@ public class GroundServiceImpl implements GroundService {
 
         Ground ground = groundRepository.findById(groundId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Ground not found"));
+                        new ResourceNotFoundException("Ground not found")
+                );
 
         groundRepository.delete(ground);
 
         return "Ground deleted successfully.";
     }
 
-    // ==================== IMAGE UPLOAD HELPERS ====================
+    // ==================== CLOUDINARY IMAGE UPLOAD ====================
 
     private List<String> saveImages(MultipartFile[] images)
             throws IOException {
 
         List<String> imageUrls = new ArrayList<>();
 
-        if (images == null) {
+        if (images == null || images.length == 0) {
             return imageUrls;
         }
-
-        Path uploadPath = Paths.get("uploads");
-        Files.createDirectories(uploadPath);
 
         for (MultipartFile image : images) {
 
             if (image != null && !image.isEmpty()) {
 
-                String originalName = image.getOriginalFilename();
-                String safeOriginalName = originalName == null
-                        ? "image"
-                        : Paths.get(originalName).getFileName().toString();
+                String imageUrl = cloudinaryImageService.uploadImage(
+                        image,
+                        "hourbook/grounds"
+                );
 
-                String fileName = UUID.randomUUID()
-                        + "_" + safeOriginalName;
-
-                Files.copy(
-                        image.getInputStream(),
-                        uploadPath.resolve(fileName),
-                        StandardCopyOption.REPLACE_EXISTING);
-
-                imageUrls.add("/uploads/" + fileName);
+                imageUrls.add(imageUrl);
             }
         }
 
@@ -262,19 +258,20 @@ public class GroundServiceImpl implements GroundService {
     }
 
     /**
-     * Returns null when no new images were provided.
-     * This lets updateGround preserve the existing image URLs.
+     * Returns null when no new images are provided.
+     * This preserves existing image URLs during an update.
      */
     private List<String> saveImagesIfProvided(MultipartFile[] images)
             throws IOException {
 
-        if (images == null) {
+        if (images == null || images.length == 0) {
             return null;
         }
 
         boolean hasNewImage = false;
 
         for (MultipartFile image : images) {
+
             if (image != null && !image.isEmpty()) {
                 hasNewImage = true;
                 break;
@@ -310,9 +307,12 @@ public class GroundServiceImpl implements GroundService {
         dto.setSlotDurationMinutes(ground.getSlotDurationMinutes());
 
         if (ground.getVendor() != null) {
+
             dto.setVendorId(ground.getVendor().getId());
+
             dto.setVendorPhoneNumber(
-                    ground.getVendor().getPhoneNumber());
+                    ground.getVendor().getPhoneNumber()
+            );
         }
 
         return dto;

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
@@ -9,7 +10,7 @@
 
         <div class="hb-topbar__inner">
 
-            <!-- Opens the navigation drawer on phones and tablets -->
+            <!-- Mobile navigation -->
             <button type="button"
                     class="hb-topbar__toggle d-lg-none"
                     data-bs-toggle="offcanvas"
@@ -21,6 +22,7 @@
 
             </button>
 
+            <!-- Header title -->
             <p class="hb-topbar__title d-lg-none">
                 HourBook
             </p>
@@ -29,37 +31,40 @@
                 User Panel
             </p>
 
+            <!-- User information -->
             <div class="hb-topbar__user">
 
                 <span class="hb-topbar__welcome d-none d-sm-inline">
                     Welcome,
                     <strong th:text="${session.userName}">
+                        User
                     </strong>
                 </span>
 
-
+                <!-- Cloudinary Profile Image -->
                 <a th:href="@{/user/profile}"
                    class="hb-avatar-link"
                    aria-label="Go to my profile">
 
-                    <!-- Profile Image -->
-
-                    <img th:if="${session.profileImage != null and !session.profileImage.isEmpty()}"
-                         th:src="@{${session.profileImage}}"
+                    <img th:if="${session.profileImage != null
+                                  and !#strings.isEmpty(session.profileImage)}"
+                         th:src="${session.profileImage}"
                          alt="User Profile"
                          class="hb-avatar"
                          width="44"
-                         height="44">
-
+                         height="44"
+                         loading="lazy"
+                         referrerpolicy="no-referrer">
 
                     <!-- Default Profile Image -->
-
-                    <img th:unless="${session.profileImage != null and !session.profileImage.isEmpty()}"
-                         src="https://placehold.co/45x45"
-                         alt="Default Profile"
+                    <img th:unless="${session.profileImage != null
+                                      and !#strings.isEmpty(session.profileImage)}"
+                         src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                         alt="Default User Profile"
                          class="hb-avatar"
                          width="44"
-                         height="44">
+                         height="44"
+                         loading="lazy">
 
                 </a>
 
@@ -69,7 +74,7 @@
 
     </header>
 
-    <!-- Browser-tab icon: src/main/resources/static/images/logo.svg -->
+    <!-- Browser tab icon -->
     <script th:inline="javascript">
         (function () {
 
@@ -92,5 +97,4 @@
 </div>
 
 </body>
-
 </html>

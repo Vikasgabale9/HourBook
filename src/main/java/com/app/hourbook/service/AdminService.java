@@ -36,19 +36,31 @@ public class AdminService {
 
 	
 
-	public ApiResponse<AdminLoginResponse> login(AdminLoginRequest request) {
 
-		AppAdmin admin = adminRepository.findByEmail(request.getEmail())
-				.orElseThrow(() -> new RuntimeException("Invalid username"));
+public ApiResponse<AdminLoginResponse> login(AdminLoginRequest request) {
+    AppAdmin admin = adminRepository.findByEmail(request.getEmail())
+        .orElseThrow(() -> new RuntimeException("Invalid username"));
 
-		if (!admin.getPassword().equals(request.getPassword())) {
-			return ApiResponse.error("Invalid password", 401, null);
-		}
+    if (!passwordEncoder.matches(
+            request.getPassword(),
+            admin.getPassword())) {
+        return ApiResponse.error("Invalid password", 401, null);
+    }
 
-		AdminLoginResponse response = new AdminLoginResponse( admin.getUsername());
+    if (!admin.isVerified()) {
+        return ApiResponse.error(
+            "Admin account is not verified", 403, null
+        );
+    }
 
-		return ApiResponse.success("Admin logged in successfully", 200, response);
-	}
+    AdminLoginResponse response =
+        new AdminLoginResponse(admin.getUsername());
+
+    return ApiResponse.success(
+        "Admin logged in successfully", 200, response
+    );
+}
+
 
 	public ApiResponse<AdminLoginResponse> register(AdminRegisterRequest request) throws Exception {
 
@@ -119,5 +131,51 @@ public class AdminService {
 	            "Verification completed"
 	    );
 	}
-	
+
+public void createDefaultAdminsIfMissing() {
+    createDefaultAdmin(
+        "admin1",
+        "admin@hourbook.com",
+        "admin@123"
+    );
+
+    createDefaultAdmin(
+        "admin2",
+        "vikasgabale@hourbook.com",
+        "admin@123"
+    );
+
+    createDefaultAdmin(
+        "admin3",
+        "vikas@hourbook.com",
+        "admin@123"
+    );
+}
+
+private void createDefaultAdmin(
+        String username,
+        String email,
+        String rawPassword) {
+
+    if (adminRepository.existsByUsernameOrEmail(username, email)) {
+        System.out.println(
+            "Default admin already exists: " + username
+        );
+        return;
+    }
+
+    AppAdmin admin = new AppAdmin();
+    admin.setUsername(username);
+    admin.setEmail(email);
+    admin.setPassword(passwordEncoder.encode(rawPassword));
+    admin.setRole(Role.ROLE_ADMIN);
+    admin.setVerified(true);
+    admin.setOtp(null);
+    admin.setToken(null);
+
+    adminRepository.save(admin);
+
+    System.out.println("Created default admin: " + username);
+}
+
 }

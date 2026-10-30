@@ -1,7 +1,5 @@
 package com.app.hourbook.controller.vendor;
 
-import java.io.IOException;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -9,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.hourbook.dto.VendorKycRequestDto;
 import com.app.hourbook.dto.VendorKycResponseDto;
@@ -25,56 +24,46 @@ public class VendorKycMvcController {
 
     private final VendorDetailsService vendorDetailsService;
 
-    // =========================================================
-    // KYC PAGE
-    // =========================================================
+    // =====================================================
+    // GET VENDOR KYC PAGE
+    // =====================================================
 
     @GetMapping("/kyc")
     public String vendorKyc(
             HttpSession session,
             Model model) {
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+        Integer vendorId = getVendorId(session);
 
         if (vendorId == null) {
-
             return "redirect:/vendor/login";
         }
 
         VendorKycResponseDto vendor =
                 vendorDetailsService.getKyc(vendorId);
 
-        model.addAttribute(
-                "vendor",
-                vendor
-        );
+        model.addAttribute("vendor", vendor);
 
         if (!model.containsAttribute("kycRequest")) {
 
             VendorKycRequestDto request =
                     new VendorKycRequestDto();
 
-            request.setFullName(
-                    vendor.getFullName()
-            );
+            request.setFullName(vendor.getFullName());
+            request.setPhoneNumber(vendor.getPhoneNumber());
+            request.setAadhaarNumber(vendor.getAadhaarNumber());
+            request.setPanNumber(vendor.getPanNumber());
+            request.setDateOfBirth(vendor.getDateOfBirth());
 
-            request.setPhoneNumber(
-                    vendor.getPhoneNumber()
-            );
-
-            model.addAttribute(
-                    "kycRequest",
-                    request
-            );
+            model.addAttribute("kycRequest", request);
         }
 
         return "vendor/kyc";
     }
 
-    // =========================================================
-    // SUBMIT KYC
-    // =========================================================
+    // =====================================================
+    // SUBMIT NEW KYC
+    // =====================================================
 
     @PostMapping("/kyc")
     public String submitKyc(
@@ -86,76 +75,78 @@ public class VendorKycMvcController {
 
             HttpSession session,
 
-            Model model) {
+            Model model,
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+            RedirectAttributes redirectAttributes) {
+
+        Integer vendorId = getVendorId(session);
 
         if (vendorId == null) {
-
             return "redirect:/vendor/login";
         }
 
-        if (result.hasErrors()) {
+        VendorKycResponseDto vendor =
+                vendorDetailsService.getKyc(vendorId);
 
-            VendorKycResponseDto vendor =
-                    vendorDetailsService.getKyc(vendorId);
+        // Validate required documents for first submission.
+        if (request.getAadhaarImage() == null ||
+                request.getAadhaarImage().isEmpty()) {
 
-            model.addAttribute(
-                    "vendor",
-                    vendor
+            result.rejectValue(
+                    "aadhaarImage",
+                    "aadhaarImage.required",
+                    "Please upload your Aadhaar document."
             );
+        }
 
+        if (request.getPanImage() == null ||
+                request.getPanImage().isEmpty()) {
+
+            result.rejectValue(
+                    "panImage",
+                    "panImage.required",
+                    "Please upload your PAN document."
+            );
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("vendor", vendor);
             return "vendor/kyc";
         }
 
         try {
 
-            vendorDetailsService.submitKyc(
-                    vendorId,
-                    request
-            );
-
-            // Update profile image in session
             VendorKycResponseDto updated =
-                    vendorDetailsService.getKyc(
-                            vendorId
+                    vendorDetailsService.submitKyc(
+                            vendorId,
+                            request
                     );
 
-            session.setAttribute(
-                    "profileImage",
-                    updated.getProfileImage()
+            updateVendorSession(session, updated);
+
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "KYC submitted successfully. Your documents are pending verification."
             );
 
-            session.setAttribute(
-                    "vendorName",
-                    updated.getFullName()
-            );
+            return "redirect:/vendor/kyc";
 
-            return "redirect:/vendor/kyc?success=true";
+        } catch (Exception ex) {
 
-        } catch (IOException | RuntimeException ex) {
+            model.addAttribute("vendor", vendor);
 
             model.addAttribute(
                     "error",
-                    ex.getMessage()
-            );
-
-            VendorKycResponseDto vendor =
-                    vendorDetailsService.getKyc(vendorId);
-
-            model.addAttribute(
-                    "vendor",
-                    vendor
+                    getErrorMessage(ex)
             );
 
             return "vendor/kyc";
         }
     }
 
-    // =========================================================
-    // UPDATE KYC
-    // =========================================================
+    // =====================================================
+    // UPDATE EXISTING KYC
+    // =====================================================
 
     @PostMapping("/kyc/update")
     public String updateKyc(
@@ -167,69 +158,97 @@ public class VendorKycMvcController {
 
             HttpSession session,
 
-            Model model) {
+            Model model,
 
-        Integer vendorId =
-                (Integer) session.getAttribute("vendorId");
+            RedirectAttributes redirectAttributes) {
+
+        Integer vendorId = getVendorId(session);
 
         if (vendorId == null) {
-
             return "redirect:/vendor/login";
         }
 
+        VendorKycResponseDto vendor =
+                vendorDetailsService.getKyc(vendorId);
+
         if (result.hasErrors()) {
-
-            VendorKycResponseDto vendor =
-                    vendorDetailsService.getKyc(vendorId);
-
-            model.addAttribute(
-                    "vendor",
-                    vendor
-            );
-
+            model.addAttribute("vendor", vendor);
             return "vendor/kyc";
         }
 
         try {
 
-            vendorDetailsService.updateKyc(
-                    vendorId,
-                    request
-            );
-
             VendorKycResponseDto updated =
-                    vendorDetailsService.getKyc(
-                            vendorId
+                    vendorDetailsService.updateKyc(
+                            vendorId,
+                            request
                     );
 
-            session.setAttribute(
-                    "profileImage",
-                    updated.getProfileImage()
+            updateVendorSession(session, updated);
+
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "KYC details updated successfully."
             );
 
-            session.setAttribute(
-                    "vendorName",
-                    updated.getFullName()
-            );
+            return "redirect:/vendor/kyc";
 
-            return "redirect:/vendor/kyc?updated=true";
+        } catch (Exception ex) {
 
-        } catch (IOException | RuntimeException ex) {
+            model.addAttribute("vendor", vendor);
 
             model.addAttribute(
                     "error",
-                    ex.getMessage()
-            );
-
-            VendorKycResponseDto vendor =
-                    vendorDetailsService.getKyc(vendorId);
-
-            model.addAttribute(
-                    "vendor",
-                    vendor
+                    getErrorMessage(ex)
             );
 
             return "vendor/kyc";
         }
+    }
+
+    // =====================================================
+    // SESSION HELPERS
+    // =====================================================
+
+    private Integer getVendorId(HttpSession session) {
+
+        Object vendorId = session.getAttribute("vendorId");
+
+        if (vendorId instanceof Integer) {
+            return (Integer) vendorId;
+        }
+
+        return null;
+    }
+
+    private void updateVendorSession(
+            HttpSession session,
+            VendorKycResponseDto vendor) {
+
+        session.setAttribute(
+                "vendorName",
+                vendor.getFullName()
+        );
+
+        session.setAttribute(
+                "vendorEmail",
+                vendor.getEmail()
+        );
+
+        session.setAttribute(
+                "profileImage",
+                vendor.getProfileImage()
+        );
+    }
+
+    private String getErrorMessage(Exception ex) {
+
+        String message = ex.getMessage();
+
+        if (message == null || message.isBlank()) {
+            return "Unable to process KYC. Please try again.";
+        }
+
+        return message;
     }
 }

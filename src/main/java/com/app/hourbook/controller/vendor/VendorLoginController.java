@@ -1,3 +1,4 @@
+
 package com.app.hourbook.controller.vendor;
 
 import org.springframework.stereotype.Controller;
@@ -12,7 +13,9 @@ import com.app.hourbook.exception.InvalidCredentialsException;
 import com.app.hourbook.model.VendorDetails;
 import com.app.hourbook.service.VendorMvcLoginService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -22,31 +25,24 @@ public class VendorLoginController {
 
     private final VendorMvcLoginService vendorMvcLoginService;
 
-    // =========================================================
-    // LOGIN PAGE
-    // =========================================================
+    // ================= LOGIN PAGE =================
 
     @GetMapping("/login")
-    public String loginPage(
-            HttpSession session,
-            Model model) {
+    public String loginPage(HttpSession session) {
 
         if (session.getAttribute("vendorId") != null) {
-
             return "redirect:/vendor/dashboard";
         }
 
         return "vendor/login";
     }
 
-    // =========================================================
-    // LOGIN
-    // =========================================================
+    // ================= LOGIN =================
 
     @PostMapping("/login")
     public String login(
             @ModelAttribute VendorDashLoginReq request,
-            HttpSession session,
+            HttpServletRequest servletRequest,
             Model model) {
 
         try {
@@ -54,10 +50,11 @@ public class VendorLoginController {
             VendorDetails vendor =
                     vendorMvcLoginService.login(request);
 
-            // -------------------------------------------------
-            // Create MVC session
-            // -------------------------------------------------
+            // Prevent session fixation.
+            HttpSession session = servletRequest.getSession(true);
+            servletRequest.changeSessionId();
 
+            // Store authenticated vendor information.
             session.setAttribute(
                     "vendorId",
                     vendor.getVendorAuth().getId()
@@ -82,22 +79,16 @@ public class VendorLoginController {
 
         } catch (InvalidCredentialsException ex) {
 
-            model.addAttribute(
-                    "error",
-                    ex.getMessage()
-            );
+            model.addAttribute("error", ex.getMessage());
 
             return "vendor/login";
         }
     }
 
-    // =========================================================
-    // LOGOUT
-    // =========================================================
+    // ================= LOGOUT =================
 
     @GetMapping("/logout")
-    public String logout(
-            HttpSession session) {
+    public String logout(HttpSession session) {
 
         session.invalidate();
 

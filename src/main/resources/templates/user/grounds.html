@@ -185,7 +185,7 @@
 
                     <img
                             th:if="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
-                            th:src="@{${ground.imageUrls[0]}}"
+                            th:src="${ground.imageUrls[0]}"
                             th:alt="'Photo of ' + ${ground.name}"
                             loading="lazy"
                             alt="Ground Image">

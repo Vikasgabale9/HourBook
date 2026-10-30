@@ -1,12 +1,9 @@
+
 package com.app.hourbook.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.InputMismatchException;
-import java.util.UUID;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,223 +28,395 @@ import com.app.hourbook.security.JwtService;
 @Service
 public class VendorDetailsService {
 
-	@Autowired
-	private VendorRepository vendorRepository;
+    @Autowired
+    private VendorRepository vendorRepository;
 
-	@Autowired
-	private VendorDetailsRepository vendorDetailsRepository;
+    @Autowired
+    private VendorDetailsRepository vendorDetailsRepository;
 
-	@Autowired
-	private EmailService emailService;
-	
-	@Autowired
-	JwtService jwtService;
+    @Autowired
+    private EmailService emailService;
 
-	public VendorDetails getVendorByPhoneNumber(String phoneNumber) {
-	return 	vendorDetailsRepository.findByVendorAuthPhoneNumber(phoneNumber).orElseThrow(()->new VendorNotFoundException("Vendro not found with : "+phoneNumber));
-	}
-	public ApiResponse<String> createProfile(Integer vendorId, VendorDetailsRequestDto request) throws Exception {
+    @Autowired
+    private JwtService jwtService;
 
-		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor not found"));
-		if (!vendor.getPhoneNumber().equals(request.getPhoneNumber())) {
-			throw new RuntimeException("PhoneNumber not matching with Token");
-		}
+    @Autowired
+    private CloudinaryImageService cloudinaryImageService;
 
-		String otp = emailService.genrateOtp();
+    // =====================================================
+    // IMAGE VALIDATION CONFIGURATION
+    // =====================================================
 
-		VendorDetails details = new VendorDetails();
-		details.setEmail(request.getEmail());
-		details.setFullName(request.getFullName());
-		details.setPassword(request.getPassword());
-		details.setPhoneNumber(request.getPhoneNumber());
-		details.setOtp(otp);
-		details.setVendorAuth(vendor);
+    private static final long MAX_KYC_FILE_SIZE =
+            5L * 1024 * 1024;
 
-		vendorDetailsRepository.save(details);
-		emailService.sendOtpEmail(request.getEmail(), otp);
+    private static final Set<String> ALLOWED_KYC_TYPES =
+            Set.of(
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp"
+            );
 
-		return ApiResponse.success("Vendor profile created successfully", 201, "Verify otp shared on Email");
-	}
+    // =====================================================
+    // GET VENDOR BY PHONE NUMBER
+    // =====================================================
 
-	public ApiResponse<VendorDetailsResponseDto> verifyOtp(VerifyOtp request, Integer id) {
-		VendorDetails v = vendorDetailsRepository.findByVendorAuthId(id).get();
+    public VendorDetails getVendorByPhoneNumber(String phoneNumber) {
 
-		if (!request.email().equals(v.getEmail())) {
-			throw new RuntimeException("Token details are is not matching with VendorDetails.");
-		}
-		if (!request.otp().equals(v.getOtp())) {
-			throw new RuntimeException("Invalid otp");
-		}
-		v.setEmailVerified(true);
-		v.setOtp(null);
-		vendorDetailsRepository.save(v);
-		VendorDetailsResponseDto res = mapToResponseDto(v);
-		return ApiResponse.success("Email verified successfully.", 201, res);
-	}
-	
-	
-	public VendorKycResponseDto submitKyc(Integer vendorId,
-	                                      VendorKycRequestDto dto)
-	        throws IOException {
+        return vendorDetailsRepository
+                .findByVendorAuthPhoneNumber(phoneNumber)
+                .orElseThrow(() ->
+                        new VendorNotFoundException(
+                                "Vendor not found with: " + phoneNumber
+                        )
+                );
+    }
 
-	    VendorDetails vendor = vendorDetailsRepository
-	            .findByVendorAuthId(vendorId)
-	            .orElseThrow(() ->
-	                    new ResourceNotFoundException("Vendor not found"));
+    // =====================================================
+    // CREATE VENDOR PROFILE
+    // =====================================================
 
-	    String reqPhone = dto.getPhoneNumber();
-	    if(!reqPhone.equals(vendor.getPhoneNumber())) {
-	    	throw new InputMismatchException("This token belongs to vendor :"+vendor.getFullName()+" plz enter valid token");
-	    }
-	    vendor.setFullName(dto.getFullName());
+    public ApiResponse<String> createProfile(
+            Integer vendorId,
+            VendorDetailsRequestDto request) throws Exception {
 
-	    vendor.setAadhaarNumber(dto.getAadhaarNumber());
-	    vendor.setPanNumber(dto.getPanNumber());
-	    vendor.setDateOfBirth(dto.getDateOfBirth());
+        Vendor vendor = vendorRepository
+                .findById(vendorId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found")
+                );
 
-	    vendor.setAadhaarImage(uploadImage(dto.getAadhaarImage(), "aadhaar"));
-	    vendor.setPanImage(uploadImage(dto.getPanImage(), "pan"));
-	    vendor.setProfileImage(uploadImage(dto.getProfileImage(), "profile"));
+        if (!vendor.getPhoneNumber().equals(request.getPhoneNumber())) {
+            throw new RuntimeException(
+                    "PhoneNumber not matching with Token"
+            );
+        }
 
-	    vendor.setKycStatus(KycStatus.PENDING);
+        String otp = emailService.genrateOtp();
 
-	    vendorDetailsRepository.save(vendor);
+        VendorDetails details = new VendorDetails();
 
-	    return mapToKycResponse(vendor);
-	}
-	
-	
-	public VendorKycResponseDto getKyc(Integer vendorId) {
+        details.setEmail(request.getEmail());
+        details.setFullName(request.getFullName());
+        details.setPassword(request.getPassword());
+        details.setPhoneNumber(request.getPhoneNumber());
+        details.setOtp(otp);
+        details.setVendorAuth(vendor);
 
-	    VendorDetails vendor = vendorDetailsRepository
-	            .findByVendorAuthId(vendorId)
-	            .orElseThrow(() ->
-	                    new ResourceNotFoundException("Vendor not found"));
-	    
-	    
-	    return mapToKycResponse(vendor);
-	}
-	
+        vendorDetailsRepository.save(details);
 
-	public VendorKycResponseDto updateKyc(Integer vendorId,
-	                                      VendorKycRequestDto dto)
-	        throws IOException {
+        emailService.sendOtpEmail(request.getEmail(), otp);
 
-	    VendorDetails vendor = vendorDetailsRepository
-	            .findByVendorAuthId(vendorId)
-	            .orElseThrow(() ->
-	                    new ResourceNotFoundException("Vendor not found"));
+        return ApiResponse.success(
+                "Vendor profile created successfully",
+                201,
+                "Verify otp shared on Email"
+        );
+    }
 
-	    String reqPhone = dto.getPhoneNumber();
-	    if(!reqPhone.equals(vendor.getPhoneNumber())) {
-	    	throw new InputMismatchException("This token belongs to vendor :"+vendor.getFullName()+" plz enter valid token");
-	    }
-	    
-	    vendor.setFullName(dto.getFullName());
-	   
+    // =====================================================
+    // VERIFY EMAIL OTP
+    // =====================================================
 
-	    vendor.setAadhaarNumber(dto.getAadhaarNumber());
-	    vendor.setPanNumber(dto.getPanNumber());
-	    vendor.setDateOfBirth(dto.getDateOfBirth());
+    public ApiResponse<VendorDetailsResponseDto> verifyOtp(
+            VerifyOtp request,
+            Integer id) {
 
-	    if (dto.getAadhaarImage() != null &&
-	            !dto.getAadhaarImage().isEmpty()) {
+        VendorDetails vendor = vendorDetailsRepository
+                .findByVendorAuthId(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vendor not found")
+                );
 
-	        vendor.setAadhaarImage(
-	                uploadImage(dto.getAadhaarImage(), "aadhaar"));
-	    }
+        if (!request.email().equals(vendor.getEmail())) {
+            throw new RuntimeException(
+                    "Token details are not matching with VendorDetails."
+            );
+        }
 
-	    if (dto.getPanImage() != null &&
-	            !dto.getPanImage().isEmpty()) {
+        if (!request.otp().equals(vendor.getOtp())) {
+            throw new RuntimeException("Invalid otp");
+        }
 
-	        vendor.setPanImage(
-	                uploadImage(dto.getPanImage(), "pan"));
-	    }
+        vendor.setEmailVerified(true);
+        vendor.setOtp(null);
 
-	    if (dto.getProfileImage() != null &&
-	            !dto.getProfileImage().isEmpty()) {
+        vendorDetailsRepository.save(vendor);
 
-	        vendor.setProfileImage(
-	                uploadImage(dto.getProfileImage(), "profile"));
-	    }
+        VendorDetailsResponseDto response =
+                mapToResponseDto(vendor);
 
-	    vendor.setKycStatus(KycStatus.PENDING);
+        return ApiResponse.success(
+                "Email verified successfully.",
+                201,
+                response
+        );
+    }
 
-	    vendorDetailsRepository.save(vendor);
+    // =====================================================
+    // SUBMIT NEW KYC
+    // =====================================================
 
-	    return mapToKycResponse(vendor);
-	}
 
-	
-	
-	private VendorDetailsResponseDto mapToResponseDto(VendorDetails vendorDetails) {
+public VendorKycResponseDto submitKyc(
+        Integer vendorId,
+        VendorKycRequestDto dto) throws IOException {
 
-		VendorDetailsResponseDto dto = new VendorDetailsResponseDto();
+    VendorDetails vendor = vendorDetailsRepository
+            .findByVendorAuthId(vendorId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Vendor not found"));
 
-		dto.setEmail(vendorDetails.getEmail());
-		dto.setFullName(vendorDetails.getFullName());
-		dto.setId(vendorDetails.getId());
+    if (!vendor.getPhoneNumber().equals(dto.getPhoneNumber())) {
+        throw new InputMismatchException(
+                "Phone number does not match this vendor.");
+    }
 
-		if (vendorDetails.getVendorAuth() != null) {
+    validateKycImage(dto.getAadhaarImage(), "Aadhaar");
+    validateKycImage(dto.getPanImage(), "PAN");
 
-			dto.setAuthId(vendorDetails.getVendorAuth().getId());
+    // Upload documents as authenticated Cloudinary assets.
+    String aadhaarPublicId =
+            cloudinaryImageService.uploadKycDocument(
+                    dto.getAadhaarImage(), "AADHAAR");
 
-			dto.setPhoneNumber(vendorDetails.getVendorAuth().getPhoneNumber());
-		}
+    String panPublicId =
+            cloudinaryImageService.uploadKycDocument(
+                    dto.getPanImage(), "PAN");
 
-		return dto;
-	}
+    // Update vendor details.
+    vendor.setFullName(dto.getFullName());
+    vendor.setAadhaarNumber(dto.getAadhaarNumber());
+    vendor.setPanNumber(dto.getPanNumber());
+    vendor.setDateOfBirth(dto.getDateOfBirth());
 
-	private String uploadImage(MultipartFile image, String folder) throws IOException {
+    // Store Cloudinary public IDs, not public URLs.
+    vendor.setAadhaarImage(aadhaarPublicId);
+    vendor.setPanImage(panPublicId);
 
-		if (image == null || image.isEmpty()) {
-			return null;
-		}
+    // Optional profile image remains a normal public image.
+    if (dto.getProfileImage() != null &&
+            !dto.getProfileImage().isEmpty()) {
 
-		String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+        String profileUrl = cloudinaryImageService.uploadImage(
+                dto.getProfileImage(),
+                "hourbook/vendors/profiles");
 
-		Path uploadPath = Paths.get("uploads/vendor/" + folder);
+        vendor.setProfileImage(profileUrl);
+    }
 
-		if (!Files.exists(uploadPath)) {
-			Files.createDirectories(uploadPath);
-		}
+    vendor.setKycStatus(KycStatus.PENDING);
 
-		Files.copy(image.getInputStream(), uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+    VendorDetails savedVendor =
+            vendorDetailsRepository.save(vendor);
 
-		return "/uploads/vendor/" + folder + "/" + fileName;
-	}
+    return mapToKycResponse(savedVendor);
+}
 
-	private VendorKycResponseDto mapToKycResponse(VendorDetails vendor) {
+    // =====================================================
+    // GET VENDOR KYC
+    // =====================================================
 
-	    return VendorKycResponseDto.builder()
+    public VendorKycResponseDto getKyc(Integer vendorId) {
 
-	            .vendorId(vendor.getVendorAuth().getId())
+        VendorDetails vendor = vendorDetailsRepository
+                .findByVendorAuthId(vendorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vendor not found")
+                );
 
-	            .fullName(vendor.getFullName())
+        return mapToKycResponse(vendor);
+    }
 
-	            .email(vendor.getEmail())
+    // =====================================================
+    // UPDATE EXISTING KYC
+    // =====================================================
 
-	            .phoneNumber(vendor.getPhoneNumber())
 
-	            .emailVerified(vendor.isEmailVerified())
+public VendorKycResponseDto updateKyc(
+        Integer vendorId,
+        VendorKycRequestDto dto) throws IOException {
 
-	            .aadhaarNumber(vendor.getAadhaarNumber())
+    VendorDetails vendor = vendorDetailsRepository
+            .findByVendorAuthId(vendorId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Vendor not found"));
 
-	            .aadhaarImage(vendor.getAadhaarImage())
+    if (!vendor.getPhoneNumber().equals(dto.getPhoneNumber())) {
+        throw new InputMismatchException(
+                "Phone number does not match this vendor.");
+    }
 
-	            .panNumber(vendor.getPanNumber())
+    vendor.setFullName(dto.getFullName());
+    vendor.setAadhaarNumber(dto.getAadhaarNumber());
+    vendor.setPanNumber(dto.getPanNumber());
+    vendor.setDateOfBirth(dto.getDateOfBirth());
 
-	            .panImage(vendor.getPanImage())
+    // Replace Aadhaar only if a new file is supplied.
+    if (dto.getAadhaarImage() != null &&
+            !dto.getAadhaarImage().isEmpty()) {
 
-	            .dateOfBirth(vendor.getDateOfBirth())
+        String aadhaarPublicId =
+                cloudinaryImageService.uploadKycDocument(
+                        dto.getAadhaarImage(), "AADHAAR");
 
-	            .profileImage(vendor.getProfileImage())
+        vendor.setAadhaarImage(aadhaarPublicId);
+    }
 
-	            .kycStatus(
-	                    vendor.getKycStatus() == null
-	                            ? "Not Submitted"
-	                            : vendor.getKycStatus().name())
+    // Replace PAN only if a new file is supplied.
+    if (dto.getPanImage() != null &&
+            !dto.getPanImage().isEmpty()) {
 
-	            .build();
-	}
+        String panPublicId =
+                cloudinaryImageService.uploadKycDocument(
+                        dto.getPanImage(), "PAN");
+
+        vendor.setPanImage(panPublicId);
+    }
+
+    // Profile image remains publicly deliverable.
+    if (dto.getProfileImage() != null &&
+            !dto.getProfileImage().isEmpty()) {
+
+        String profileUrl = cloudinaryImageService.uploadImage(
+                dto.getProfileImage(),
+                "hourbook/vendors/profiles");
+
+        vendor.setProfileImage(profileUrl);
+    }
+
+    vendor.setKycStatus(KycStatus.PENDING);
+
+    VendorDetails savedVendor =
+            vendorDetailsRepository.save(vendor);
+
+    return mapToKycResponse(savedVendor);
+}
+
+
+    // =====================================================
+    // MAP VENDOR DETAILS RESPONSE DTO
+    // =====================================================
+
+    private VendorDetailsResponseDto mapToResponseDto(
+            VendorDetails vendorDetails) {
+
+        VendorDetailsResponseDto dto =
+                new VendorDetailsResponseDto();
+
+        dto.setEmail(vendorDetails.getEmail());
+        dto.setFullName(vendorDetails.getFullName());
+        dto.setId(vendorDetails.getId());
+
+        if (vendorDetails.getVendorAuth() != null) {
+
+            dto.setAuthId(
+                    vendorDetails.getVendorAuth().getId()
+            );
+
+            dto.setPhoneNumber(
+                    vendorDetails.getVendorAuth().getPhoneNumber()
+            );
+        }
+
+        return dto;
+    }
+
+    // =====================================================
+    // MAP KYC RESPONSE DTO
+    // =====================================================
+
+
+private VendorKycResponseDto mapToKycResponse(VendorDetails vendor) {
+
+    return VendorKycResponseDto.builder()
+
+            .vendorId(
+                    vendor.getVendorAuth().getId()
+            )
+
+            .fullName(
+                    vendor.getFullName()
+            )
+
+            .email(
+                    vendor.getEmail()
+            )
+
+            .phoneNumber(
+                    vendor.getPhoneNumber()
+            )
+
+            .emailVerified(
+                    vendor.isEmailVerified()
+            )
+
+            .aadhaarNumber(
+                    vendor.getAadhaarNumber()
+            )
+
+            // These fields now contain Cloudinary public IDs,
+            // not publicly accessible image URLs.
+            .aadhaarImage(
+                    vendor.getAadhaarImage()
+            )
+
+            .panNumber(
+                    vendor.getPanNumber()
+            )
+
+            .panImage(
+                    vendor.getPanImage()
+            )
+
+            .dateOfBirth(
+                    vendor.getDateOfBirth()
+            )
+
+            // Profile image remains a normal public image URL.
+            .profileImage(
+                    vendor.getProfileImage()
+            )
+
+            .kycStatus(
+                    vendor.getKycStatus() == null
+                            ? "Not Submitted"
+                            : vendor.getKycStatus().name()
+            )
+
+            .build();
+}
+
+    // =====================================================
+    // VALIDATE KYC IMAGE
+    // =====================================================
+
+    private void validateKycImage(
+            MultipartFile image,
+            String documentName) {
+
+        if (image == null || image.isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    documentName + " image is required."
+            );
+        }
+
+        if (image.getSize() > MAX_KYC_FILE_SIZE) {
+
+            throw new IllegalArgumentException(
+                    documentName + " image must not exceed 5 MB."
+            );
+        }
+
+        String contentType = image.getContentType();
+
+        if (contentType == null ||
+                !ALLOWED_KYC_TYPES.contains(contentType)) {
+
+            throw new IllegalArgumentException(
+                    documentName + " must be JPG, PNG or WEBP."
+            );
+        }
+    }
 }

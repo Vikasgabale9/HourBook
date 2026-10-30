@@ -87,7 +87,7 @@
 
                             <img
                                     th:each="image : ${ground.imageUrls}"
-                                    th:src="@{${image}}"
+                                    th:src="${image}"
                                     th:alt="'Photo of ' + ${ground.name}"
                                     loading="lazy"
                                     alt="Ground Image">

@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.app.hourbook.enums.BookingStatus;
 import com.app.hourbook.model.Booking;
 import com.app.hourbook.repository.BookingRepository;
 
@@ -22,17 +21,16 @@ public class VendorRevenueServiceImpl implements VendorRevenueService {
     public List<Booking> getVendorRevenueBookings(Integer vendorId) {
 
         return bookingRepository
-                .findByGround_Vendor_IdAndStatusOrderByBookingDateDescStartTimeDesc(
+                .findVendorBookingsWithUserAndGroundByStatus(
                         vendorId,
-                        BookingStatus.CONFIRMED
+                        com.app.hourbook.enums.BookingStatus.CONFIRMED
                 );
     }
 
     @Override
     public Double getTotalRevenue(Integer vendorId) {
 
-        List<Booking> bookings =
-                getVendorRevenueBookings(vendorId);
+        List<Booking> bookings = getVendorRevenueBookings(vendorId);
 
         return bookings.stream()
                 .map(Booking::getTotalAmount)

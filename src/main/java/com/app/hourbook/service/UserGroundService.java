@@ -1,3 +1,4 @@
+
 package com.app.hourbook.service;
 
 import org.hibernate.Hibernate;
@@ -35,15 +36,12 @@ public class UserGroundService {
         Page<Ground> groundPage;
 
         if (search != null && !search.isBlank()) {
-
             groundPage = groundRepository
                     .findByStatusAndIsActiveTrueAndNameContainingIgnoreCase(
                             GroundStatus.APPROVED,
-                            search,
+                            search.trim(),
                             pageable);
-
         } else {
-
             groundPage = groundRepository
                     .findByStatusAndIsActiveTrue(
                             GroundStatus.APPROVED,
@@ -62,8 +60,7 @@ public class UserGroundService {
     @Transactional(readOnly = true)
     public Ground getGround(Integer id) {
 
-        Ground ground = groundRepository
-                .findById(id)
+        Ground ground = groundRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Ground not found"));
 

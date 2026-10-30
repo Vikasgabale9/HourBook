@@ -1,11 +1,7 @@
+
 package com.app.hourbook.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,12 +26,10 @@ public class UserRegisterService {
     private final AppUserDetailsRepository appUserDetailsRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryImageService cloudinaryImageService;
 
     private static final long MAX_PROFILE_IMAGE_SIZE =
             5 * 1024 * 1024;
-
-    private static final String UPLOAD_DIRECTORY =
-            "uploads/user/profile";
 
     @Transactional
     public Integer register(
@@ -59,13 +53,10 @@ public class UserRegisterService {
 
         AppUser appUser =
                 appUserRepository
-                        .findByPhoneNumber(
-                                request.getPhoneNumber()
-                        )
+                        .findByPhoneNumber(request.getPhoneNumber())
                         .orElse(null);
 
-        if (appUser != null
-                && appUser.isVerified()) {
+        if (appUser != null && appUser.isVerified()) {
 
             throw new RuntimeException(
                     "Phone number is already registered"
@@ -76,83 +67,65 @@ public class UserRegisterService {
 
             appUser = new AppUser();
 
-            appUser.setPhoneNumber(
-                    request.getPhoneNumber()
-            );
-
-            appUser.setRole(
-                    Role.ROLE_USER
-            );
+            appUser.setPhoneNumber(request.getPhoneNumber());
+            appUser.setRole(Role.ROLE_USER);
 
         } else {
 
-            appUser.setPhoneNumber(
-                    request.getPhoneNumber()
-            );
-
-            appUser.setRole(
-                    Role.ROLE_USER
-            );
+            appUser.setPhoneNumber(request.getPhoneNumber());
+            appUser.setRole(Role.ROLE_USER);
         }
 
-        String otp =
-                emailService.genrateOtp();
+        String otp = emailService.genrateOtp();
 
         appUser.setOtp(otp);
         appUser.setVerified(false);
         appUser.setToken(null);
 
-        appUser =
-                appUserRepository.save(appUser);
+        appUser = appUserRepository.save(appUser);
 
         AppUserDetails details =
                 appUserDetailsRepository
-                        .findByAppUserId(
-                                appUser.getId()
-                        )
+                        .findByAppUserId(appUser.getId())
                         .orElse(null);
 
         if (details == null) {
 
             details = new AppUserDetails();
-
             details.setAppUser(appUser);
         }
 
-        details.setFullName(
-                request.getFullName()
-        );
-
-        details.setPhoneNumber(
-                request.getPhoneNumber()
-        );
-
-        details.setEmail(
-                request.getEmail()
-        );
+        details.setFullName(request.getFullName());
+        details.setPhoneNumber(request.getPhoneNumber());
+        details.setEmail(request.getEmail());
 
         details.setPassword(
-        	    passwordEncoder.encode(request.getPassword())
-        	);
+                passwordEncoder.encode(request.getPassword())
+        );
+
         details.setOtp(otp);
-
         details.setEmailVerified(false);
-
         details.setActive(true);
 
-        /*
-         * Profile image
-         */
-        MultipartFile profileImage =
-                request.getProfileImage();
+        // ==================== PROFILE IMAGE - CLOUDINARY ====================
 
-        if (profileImage != null
-                && !profileImage.isEmpty()) {
+        MultipartFile profileImage = request.getProfileImage();
 
-            String imagePath =
-                    saveProfileImage(profileImage);
+        if (profileImage != null && !profileImage.isEmpty()) {
 
-            details.setProfileImage(imagePath);
+            if (profileImage.getSize() > MAX_PROFILE_IMAGE_SIZE) {
+
+                throw new RuntimeException(
+                        "Profile image size must not exceed 5 MB"
+                );
+            }
+
+            String imageUrl = cloudinaryImageService.uploadImage(
+                    profileImage,
+                    "hourbook/users/profiles"
+            );
+
+            details.setProfileImage(imageUrl);
         }
 
         appUserDetailsRepository.save(details);
@@ -165,63 +138,7 @@ public class UserRegisterService {
         return appUser.getId();
     }
 
-    private String saveProfileImage(
-            MultipartFile file) throws IOException {
-
-        if (file.getSize() > MAX_PROFILE_IMAGE_SIZE) {
-
-            throw new RuntimeException(
-                    "Profile image size must not exceed 5 MB"
-            );
-        }
-
-        String contentType =
-                file.getContentType();
-
-        if (contentType == null
-                || !(contentType.equalsIgnoreCase("image/jpeg")
-                || contentType.equalsIgnoreCase("image/jpg")
-                || contentType.equalsIgnoreCase("image/png"))) {
-
-            throw new RuntimeException(
-                    "Only JPG, JPEG and PNG images are allowed"
-            );
-        }
-
-        Path uploadPath =
-                Paths.get(UPLOAD_DIRECTORY);
-
-        Files.createDirectories(uploadPath);
-
-        String originalFilename =
-                file.getOriginalFilename();
-
-        String extension = "";
-
-        if (originalFilename != null
-                && originalFilename.contains(".")) {
-
-            extension =
-                    originalFilename.substring(
-                            originalFilename.lastIndexOf(".")
-                    );
-        }
-
-        String filename =
-                UUID.randomUUID()
-                        + extension;
-
-        Path targetPath =
-                uploadPath.resolve(filename);
-
-        Files.copy(
-                file.getInputStream(),
-                targetPath,
-                StandardCopyOption.REPLACE_EXISTING
-        );
-
-        return "/uploads/user/profile/" + filename;
-    }
+    // ==================== VERIFY OTP ====================
 
     @Transactional
     public AppUserDetails verifyOtp(
@@ -232,9 +149,7 @@ public class UserRegisterService {
                 appUserRepository
                         .findById(userId)
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "User not found"
-                                )
+                                new RuntimeException("User not found")
                         );
 
         if (appUser.getOtp() == null) {

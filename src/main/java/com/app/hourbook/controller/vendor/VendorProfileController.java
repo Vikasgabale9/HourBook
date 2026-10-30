@@ -1,11 +1,7 @@
+
 package com.app.hourbook.controller.vendor;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.hourbook.model.VendorDetails;
 import com.app.hourbook.repository.VendorDetailsRepository;
+import com.app.hourbook.service.CloudinaryImageService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -28,14 +25,21 @@ import lombok.RequiredArgsConstructor;
 public class VendorProfileController {
 
     private final VendorDetailsRepository vendorDetailsRepository;
+    private final CloudinaryImageService cloudinaryImageService;
+
+    private static final long MAX_IMAGE_SIZE = 5L * 1024 * 1024;
 
     // =========================
     // VIEW PROFILE
     // =========================
-    @GetMapping("/profile")
-    public String profile(HttpSession session, Model model) {
 
-        Integer vendorId = (Integer) session.getAttribute("vendorId");
+    @GetMapping("/profile")
+    public String profile(
+            HttpSession session,
+            Model model) {
+
+        Integer vendorId =
+                (Integer) session.getAttribute("vendorId");
 
         if (vendorId == null) {
             return "redirect:/vendor/login";
@@ -48,16 +52,25 @@ public class VendorProfileController {
 
         model.addAttribute("vendor", vendor);
 
+        // Keep session synchronized with database.
+        session.setAttribute("vendorName", vendor.getFullName());
+        session.setAttribute("vendorEmail", vendor.getEmail());
+        session.setAttribute("profileImage", vendor.getProfileImage());
+
         return "vendor/profile";
     }
 
     // =========================
     // EDIT PROFILE PAGE
     // =========================
-    @GetMapping("/profile/edit")
-    public String editProfile(HttpSession session, Model model) {
 
-        Integer vendorId = (Integer) session.getAttribute("vendorId");
+    @GetMapping("/profile/edit")
+    public String editProfile(
+            HttpSession session,
+            Model model) {
+
+        Integer vendorId =
+                (Integer) session.getAttribute("vendorId");
 
         if (vendorId == null) {
             return "redirect:/vendor/login";
@@ -76,6 +89,7 @@ public class VendorProfileController {
     // =========================
     // UPDATE PROFILE
     // =========================
+
     @PostMapping("/profile/update")
     public String updateProfile(
             HttpSession session,
@@ -84,7 +98,8 @@ public class VendorProfileController {
             @RequestParam(required = false) MultipartFile profileImage,
             RedirectAttributes redirectAttributes) {
 
-        Integer vendorId = (Integer) session.getAttribute("vendorId");
+        Integer vendorId =
+                (Integer) session.getAttribute("vendorId");
 
         if (vendorId == null) {
             return "redirect:/vendor/login";
@@ -97,91 +112,59 @@ public class VendorProfileController {
                     .orElseThrow(() ->
                             new RuntimeException("Vendor profile not found"));
 
-            // Update name
+            // Update basic details.
             vendor.setFullName(fullName);
-
-            // Update email
             vendor.setEmail(email);
 
             // =========================
-            // PROFILE IMAGE
+            // CLOUDINARY PROFILE IMAGE
             // =========================
+
             if (profileImage != null && !profileImage.isEmpty()) {
 
-                // Maximum 5 MB
-                if (profileImage.getSize() > 5 * 1024 * 1024) {
+                if (profileImage.getSize() > MAX_IMAGE_SIZE) {
+
                     redirectAttributes.addFlashAttribute(
                             "error",
-                            "Profile image must not exceed 5 MB"
+                            "Profile image must not exceed 5 MB."
                     );
 
                     return "redirect:/vendor/profile/edit";
                 }
 
-                // Allowed image types
                 String contentType = profileImage.getContentType();
 
                 if (contentType == null ||
                         !(contentType.equals("image/jpeg")
-                        || contentType.equals("image/jpg")
-                        || contentType.equals("image/png"))) {
+                        || contentType.equals("image/png")
+                        || contentType.equals("image/webp"))) {
 
                     redirectAttributes.addFlashAttribute(
                             "error",
-                            "Only JPG, JPEG and PNG images are allowed"
+                            "Only JPG, PNG and WEBP images are allowed."
                     );
 
                     return "redirect:/vendor/profile/edit";
                 }
 
-                // Upload directory
-                Path uploadDir = Paths.get(
-                        "uploads/vendor/profile"
+                // Upload to Cloudinary.
+                String imageUrl = cloudinaryImageService.uploadImage(
+                        profileImage,
+                        "hourbook/vendors/profiles"
                 );
 
-                Files.createDirectories(uploadDir);
-
-                // Generate unique filename
-                String originalFileName =
-                        profileImage.getOriginalFilename();
-
-                String extension = "";
-
-                if (originalFileName != null &&
-                        originalFileName.contains(".")) {
-
-                    extension = originalFileName.substring(
-                            originalFileName.lastIndexOf(".")
-                    );
-                }
-
-                String fileName =
-                        UUID.randomUUID() + extension;
-
-                Path filePath =
-                        uploadDir.resolve(fileName);
-
-                // Save file
-                Files.copy(
-                        profileImage.getInputStream(),
-                        filePath,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-
-                // Store URL/path in database
-                String imagePath =
-                        "/uploads/vendor/profile/" + fileName;
-
-                vendor.setProfileImage(imagePath);
+                // Save Cloudinary URL in database.
+                vendor.setProfileImage(imageUrl);
             }
 
-            // Save vendor
+            // Save vendor details.
             VendorDetails updatedVendor =
                     vendorDetailsRepository.save(vendor);
 
             // =========================
             // UPDATE SESSION
             // =========================
+
             session.setAttribute(
                     "vendorName",
                     updatedVendor.getFullName()
@@ -199,7 +182,7 @@ public class VendorProfileController {
 
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Profile updated successfully"
+                    "Profile updated successfully."
             );
 
             return "redirect:/vendor/profile";
@@ -208,7 +191,7 @@ public class VendorProfileController {
 
             redirectAttributes.addFlashAttribute(
                     "error",
-                    "Failed to upload profile image"
+                    "Cloudinary image upload failed. Please try again."
             );
 
             return "redirect:/vendor/profile/edit";
@@ -217,7 +200,7 @@ public class VendorProfileController {
 
             redirectAttributes.addFlashAttribute(
                     "error",
-                    e.getMessage()
+                    "Profile update failed: " + e.getMessage()
             );
 
             return "redirect:/vendor/profile/edit";

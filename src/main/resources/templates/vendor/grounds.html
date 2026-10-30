@@ -299,7 +299,7 @@
 
                                 <img
                                         th:if="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
-                                        th:src="@{${ground.imageUrls[0]}}"
+                                        th:src="${ground.imageUrls[0]}"
                                         class="ground-thumb">
 
                                 <span th:unless="${ground.imageUrls != null and !ground.imageUrls.isEmpty()}"
