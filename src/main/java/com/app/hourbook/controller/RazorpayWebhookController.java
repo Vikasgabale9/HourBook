@@ -1,6 +1,8 @@
 
 package com.app.hourbook.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,9 @@ public class RazorpayWebhookController {
 
     private final PaymentService paymentService;
     private final RazorpayWebhookService webhookService;
+    
+    private static final Logger log =
+            LoggerFactory.getLogger(RazorpayWebhookController.class);
 
     @PostMapping
     public ResponseEntity<String> receiveWebhook(
@@ -49,7 +54,8 @@ public class RazorpayWebhookController {
         // Razorpay can then retry transient processing failures.
         webhookService.processEvent(rawBody, eventId);
  
-        System.out.println("++++++++++++++++++++++++++++/Webhook++++++++++++++++++++++++++++++++++++++");
+        log.info("Razorpay webhook received successfully. Event ID: {}", eventId);
+      
         return ResponseEntity.ok("Webhook received");
     }
 }
